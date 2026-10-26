@@ -1,0 +1,533 @@
+pragma silverscript ^0.1.0;
+
+// TN10 lab. One lineage per vault.
+// kind 1 locks sompi. debt is cents.
+// kind 2 is the note. amount is cents.
+// Owner scheme 0 and borrow scheme 0 only.
+// This is not a conforming KCC-20 program.
+
+contract Vault(
+    int initAmount,
+    byte[32] initOwner,
+    byte initOwnerScheme,
+    byte initBorrowScheme,
+    byte[32] initBorrowGuard,
+    byte[32] initExtension,
+    int initKind,
+    int initDebt,
+    byte[32] initOracle,
+    int initRatioBps,
+    int initLiqBps,
+    int initBonusBps,
+    int initSealed
+) {
+    int constant MAX_DEBT = 1000000;
+    int constant MAX_PRICE = 10000000000;
+    int constant MAX_RATIO = 50000;
+    // One hour, in unix milliseconds. A lock time under 500000000000 is a DAA score.
+    int constant WINDOW = 3600000;
+    int constant DUST = 20000000;
+    int constant CARRIER = 20000000;
+    int constant KIND_VAULT = 1;
+    int constant KIND_NOTE = 2;
+    byte constant SCHEME_NONE = 0x00;
+
+    int amount = initAmount;
+    byte[32] owner = initOwner;
+    byte ownerScheme = initOwnerScheme;
+    byte borrowScheme = initBorrowScheme;
+    byte[32] borrowGuard = initBorrowGuard;
+    byte[32] extension = initExtension;
+    int kind = initKind;
+    int debt = initDebt;
+    byte[32] oracle = initOracle;
+    int ratioBps = initRatioBps;
+    int liqBps = initLiqBps;
+    int bonusBps = initBonusBps;
+    int sealed = initSealed;
+
+    function zeros() : byte[32] {
+        byte[32] z = byte[32](0x0000000000000000000000000000000000000000000000000000000000000000);
+        return z;
+    }
+
+    function fairSompi(int cents, int price) : int {
+        require(cents >= 0);
+        require(cents <= MAX_DEBT);
+        require(price > 0);
+        require(price <= MAX_PRICE);
+        int fair = cents * price;
+        fair = (fair + 99) / 100;
+        return fair;
+    }
+
+    function atRatio(int cents, int price, int ratio) : int {
+        require(ratio > 0);
+        require(ratio <= MAX_RATIO);
+        int fair = fairSompi(cents, price);
+        int scaled = fair * ratio;
+        scaled = (scaled + 9999) / 10000;
+        return scaled;
+    }
+
+    function thisId() : byte[32] {
+        byte[32] id = OpInputCovenantId(this.activeInputIndex);
+        require(id != zeros());
+        return id;
+    }
+
+    function policy() {
+        require(ratioBps > liqBps);
+        require(liqBps > 10000);
+        require(bonusBps >= 0);
+        require(bonusBps <= 2000);
+        require(ratioBps <= MAX_RATIO);
+        require(liqBps <= MAX_RATIO);
+        require(10000 + bonusBps <= MAX_RATIO);
+        require(oracle != zeros());
+        require(ownerScheme == SCHEME_NONE);
+        require(borrowScheme == SCHEME_NONE);
+        require(borrowGuard == zeros());
+    }
+
+    function emit(
+        int outIdx,
+        int fAmount,
+        byte[32] fOwner,
+        byte fOwnerScheme,
+        byte fBorrowScheme,
+        byte[32] fBorrowGuard,
+        byte[32] fExtension,
+        int fKind,
+        int fDebt,
+        byte[32] fOracle,
+        int fRatio,
+        int fLiq,
+        int fBonus,
+        int fSealed
+    ) {
+        require(fSealed == 1);
+        require(fOwnerScheme == SCHEME_NONE);
+        require(fBorrowScheme == SCHEME_NONE);
+        require(fBorrowGuard == zeros());
+        require(fOracle != zeros());
+        require(fRatio > fLiq);
+        require(fLiq > 10000);
+        require(fBonus >= 0);
+        require(fBonus <= 2000);
+        if (fKind == KIND_VAULT) {
+            require(fAmount == 0);
+            require(fDebt >= 0);
+            require(fDebt <= MAX_DEBT);
+        } else {
+            require(fKind == KIND_NOTE);
+            require(fDebt == 0);
+            require(fAmount > 0);
+            require(fAmount <= MAX_DEBT);
+        }
+        validateOutputState(outIdx, State {
+            amount: fAmount,
+            owner: fOwner,
+            ownerScheme: fOwnerScheme,
+            borrowScheme: fBorrowScheme,
+            borrowGuard: fBorrowGuard,
+            extension: fExtension,
+            kind: fKind,
+            debt: fDebt,
+            oracle: fOracle,
+            ratioBps: fRatio,
+            liqBps: fLiq,
+            bonusBps: fBonus,
+            sealed: fSealed
+        });
+    }
+
+    function continueVault(int nextDebt) {
+        emit(
+            0,
+            0,
+            owner,
+            ownerScheme,
+            borrowScheme,
+            borrowGuard,
+            extension,
+            KIND_VAULT,
+            nextDebt,
+            oracle,
+            ratioBps,
+            liqBps,
+            bonusBps,
+            1
+        );
+    }
+
+    function priceMessage(int price, int notBefore, int expiry, datasig oracleSig) {
+        require(price > 0);
+        require(price <= MAX_PRICE);
+        require(expiry > notBefore);
+        int span = expiry - notBefore;
+        require(span > 0);
+        require(span <= WINDOW);
+        int lockTime = OpTxLockTime();
+        require(lockTime >= notBefore);
+        require(lockTime <= expiry);
+        byte[] message = OpNum2Bin(price, 8) + OpNum2Bin(notBefore, 8) + OpNum2Bin(expiry, 8);
+        require(checkMsgSig(oracleSig, blake3(message), pubkey(oracle)));
+    }
+
+    function singleShape() {
+        byte[32] id = thisId();
+        require(tx.version >= 1);
+        require(this.activeInputIndex == 0);
+        require(OpCovInputCount(id) == 1);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovOutputCount(id) == 1);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpOutputCovenantId(0) == id);
+        require(OpAuthOutputCount(0) == 1);
+        require(OpAuthOutputIdx(0, 0) == 0);
+    }
+
+    function mintShape() {
+        byte[32] id = thisId();
+        require(tx.version >= 1);
+        require(this.activeInputIndex == 0);
+        require(OpCovInputCount(id) == 1);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovOutputCount(id) == 2);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpCovOutputIdx(id, 1) == 1);
+        require(OpOutputCovenantId(0) == id);
+        require(OpOutputCovenantId(1) == id);
+        require(OpAuthOutputCount(0) == 2);
+        require(OpAuthOutputIdx(0, 0) == 0);
+        require(OpAuthOutputIdx(0, 1) == 1);
+    }
+
+    function moveShape() {
+        byte[32] id = thisId();
+        require(tx.version >= 1);
+        require(OpInputCovenantId(0) == id);
+        require(OpInputCovenantId(1) == id);
+        require(OpCovInputCount(id) == 2);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovInputIdx(id, 1) == 1);
+        require(OpCovOutputCount(id) == 2);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpCovOutputIdx(id, 1) == 1);
+        require(OpOutputCovenantId(0) == id);
+        require(OpOutputCovenantId(1) == id);
+        require(OpAuthOutputCount(0) == 1);
+        require(OpAuthOutputIdx(0, 0) == 0);
+        require(OpAuthOutputCount(1) == 1);
+        require(OpAuthOutputIdx(1, 0) == 1);
+    }
+
+    function burnShape() {
+        byte[32] id = thisId();
+        require(tx.version >= 1);
+        require(OpInputCovenantId(0) == id);
+        require(OpInputCovenantId(1) == id);
+        require(OpCovInputCount(id) == 2);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovInputIdx(id, 1) == 1);
+        require(OpCovOutputCount(id) == 1);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpOutputCovenantId(0) == id);
+        require(OpAuthOutputCount(0) == 1);
+        require(OpAuthOutputIdx(0, 0) == 0);
+        require(OpAuthOutputCount(1) == 0);
+    }
+
+    function vaultHead() {
+        require(this.activeInputIndex == 0);
+        require(kind == KIND_VAULT);
+        require(sealed == 1);
+        require(amount == 0);
+        policy();
+    }
+
+    function noteHead() {
+        require(this.activeInputIndex == 1);
+        require(kind == KIND_NOTE);
+        require(sealed == 1);
+        require(debt == 0);
+        require(amount > 0);
+        require(amount <= MAX_DEBT);
+        policy();
+    }
+
+    function splitSeize(int collateral, int cap) : int {
+        require(cap >= DUST);
+        require(collateral >= DUST + DUST);
+        int seized = 0;
+        int left = 0;
+        if (collateral >= cap + DUST) {
+            seized = cap;
+            left = collateral - cap;
+        } else {
+            seized = collateral - DUST;
+            left = DUST;
+        }
+        require(seized <= cap);
+        require(seized >= DUST);
+        require(left >= DUST);
+        require(seized + left == collateral);
+        require(tx.outputs[0].value == left);
+        require(tx.outputs[1].value == seized);
+        return seized;
+    }
+
+    entry seal(sig ownerSig) {
+        require(this.activeInputIndex == 0);
+        require(kind == KIND_VAULT);
+        require(sealed == 0);
+        require(debt == 0);
+        require(amount == 0);
+        policy();
+        require(tx.inputs[0].value >= DUST);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        singleShape();
+        continueVault(0);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry deposit() {
+        vaultHead();
+        require(tx.outputs[0].value > tx.inputs[0].value);
+        singleShape();
+        continueVault(debt);
+    }
+
+    entry mint(int mintAmount, byte[32] noteOwner, int price, int notBefore, int expiry, datasig oracleSig, sig ownerSig) {
+        vaultHead();
+        require(debt == 0);
+        require(mintAmount > 0);
+        require(mintAmount <= MAX_DEBT);
+        require(noteOwner != zeros());
+        require(tx.inputs[0].value >= DUST);
+        require(tx.inputs[0].value >= atRatio(mintAmount, price, ratioBps));
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        require(tx.outputs[1].value == CARRIER);
+        mintShape();
+        continueVault(mintAmount);
+        emit(
+            1,
+            mintAmount,
+            noteOwner,
+            SCHEME_NONE,
+            SCHEME_NONE,
+            borrowGuard,
+            extension,
+            KIND_NOTE,
+            0,
+            oracle,
+            ratioBps,
+            liqBps,
+            bonusBps,
+            1
+        );
+        priceMessage(price, notBefore, expiry, oracleSig);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry withdraw(int takeSompi, int price, int notBefore, int expiry, datasig oracleSig, sig ownerSig) {
+        vaultHead();
+        require(takeSompi > 0);
+        int collateral = tx.inputs[0].value;
+        require(collateral > takeSompi);
+        int left = collateral - takeSompi;
+        require(left >= DUST);
+        require(left >= atRatio(debt, price, ratioBps));
+        require(tx.outputs[0].value == left);
+        singleShape();
+        continueVault(debt);
+        priceMessage(price, notBefore, expiry, oracleSig);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry vaultMove(byte[32] newOwner) {
+        vaultHead();
+        require(newOwner != zeros());
+        require(tx.inputs[1].value == CARRIER);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        require(tx.outputs[1].value == CARRIER);
+        moveShape();
+        State note = readInputState(1);
+        require(note.kind == KIND_NOTE);
+        require(note.sealed == 1);
+        require(note.debt == 0);
+        require(note.amount > 0);
+        require(note.extension == extension);
+        require(note.oracle == oracle);
+        require(note.ratioBps == ratioBps);
+        require(note.liqBps == liqBps);
+        require(note.bonusBps == bonusBps);
+        continueVault(debt);
+        emit(
+            1,
+            note.amount,
+            newOwner,
+            SCHEME_NONE,
+            SCHEME_NONE,
+            note.borrowGuard,
+            note.extension,
+            KIND_NOTE,
+            0,
+            note.oracle,
+            note.ratioBps,
+            note.liqBps,
+            note.bonusBps,
+            1
+        );
+    }
+
+    entry noteMove(byte[32] newOwner, sig ownerSig) {
+        noteHead();
+        require(newOwner != zeros());
+        require(tx.inputs[1].value == CARRIER);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        require(tx.outputs[1].value == CARRIER);
+        moveShape();
+        State vault = readInputState(0);
+        require(vault.kind == KIND_VAULT);
+        require(vault.sealed == 1);
+        require(vault.amount == 0);
+        require(vault.extension == extension);
+        require(vault.oracle == oracle);
+        emit(
+            0,
+            0,
+            vault.owner,
+            vault.ownerScheme,
+            vault.borrowScheme,
+            vault.borrowGuard,
+            vault.extension,
+            KIND_VAULT,
+            vault.debt,
+            vault.oracle,
+            vault.ratioBps,
+            vault.liqBps,
+            vault.bonusBps,
+            1
+        );
+        emit(
+            1,
+            amount,
+            newOwner,
+            SCHEME_NONE,
+            SCHEME_NONE,
+            borrowGuard,
+            extension,
+            KIND_NOTE,
+            0,
+            oracle,
+            ratioBps,
+            liqBps,
+            bonusBps,
+            1
+        );
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry vaultRepay() {
+        vaultHead();
+        require(tx.inputs[1].value == CARRIER);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        burnShape();
+        State note = readInputState(1);
+        require(note.kind == KIND_NOTE);
+        require(note.sealed == 1);
+        require(note.debt == 0);
+        require(note.amount > 0);
+        require(note.amount <= debt);
+        require(note.extension == extension);
+        require(note.oracle == oracle);
+        int nextDebt = debt - note.amount;
+        continueVault(nextDebt);
+    }
+
+    entry noteBurn(sig ownerSig) {
+        noteHead();
+        require(tx.inputs[1].value == CARRIER);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        burnShape();
+        State vault = readInputState(0);
+        require(vault.kind == KIND_VAULT);
+        require(vault.sealed == 1);
+        require(vault.amount == 0);
+        require(amount <= vault.debt);
+        require(vault.extension == extension);
+        int nextDebt = vault.debt - amount;
+        emit(
+            0,
+            0,
+            vault.owner,
+            vault.ownerScheme,
+            vault.borrowScheme,
+            vault.borrowGuard,
+            vault.extension,
+            KIND_VAULT,
+            nextDebt,
+            vault.oracle,
+            vault.ratioBps,
+            vault.liqBps,
+            vault.bonusBps,
+            1
+        );
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry vaultLiquidate(int price, int notBefore, int expiry, datasig oracleSig) {
+        vaultHead();
+        require(debt > 0);
+        require(tx.inputs[1].value == CARRIER);
+        require(tx.inputs[0].value < atRatio(debt, price, liqBps));
+        burnShape();
+        State note = readInputState(1);
+        require(note.kind == KIND_NOTE);
+        require(note.sealed == 1);
+        require(note.amount == debt);
+        require(note.extension == extension);
+        require(note.oracle == oracle);
+        int cap = atRatio(debt, price, 10000 + bonusBps);
+        splitSeize(tx.inputs[0].value, cap);
+        continueVault(0);
+        require(tx.outputs[1].scriptPubKey == byte[](new ScriptPubKeyP2PK(pubkey(note.owner))));
+        priceMessage(price, notBefore, expiry, oracleSig);
+    }
+
+    entry noteLiquidate(int price, int notBefore, int expiry, datasig oracleSig, sig ownerSig) {
+        noteHead();
+        require(tx.inputs[1].value == CARRIER);
+        burnShape();
+        State vault = readInputState(0);
+        require(vault.kind == KIND_VAULT);
+        require(vault.sealed == 1);
+        require(vault.amount == 0);
+        require(vault.debt == amount);
+        require(vault.extension == extension);
+        require(tx.inputs[0].value < atRatio(vault.debt, price, vault.liqBps));
+        int cap = atRatio(vault.debt, price, 10000 + vault.bonusBps);
+        splitSeize(tx.inputs[0].value, cap);
+        emit(
+            0,
+            0,
+            vault.owner,
+            vault.ownerScheme,
+            vault.borrowScheme,
+            vault.borrowGuard,
+            vault.extension,
+            KIND_VAULT,
+            0,
+            vault.oracle,
+            vault.ratioBps,
+            vault.liqBps,
+            vault.bonusBps,
+            1
+        );
+        require(tx.outputs[1].scriptPubKey == byte[](new ScriptPubKeyP2PK(pubkey(owner))));
+        priceMessage(price, notBefore, expiry, oracleSig);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+}

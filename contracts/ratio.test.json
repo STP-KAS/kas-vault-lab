@@ -1,0 +1,142 @@
+{
+  "tests": [
+    {
+      "name": "fair_one_dollar",
+      "function": "fair",
+      "args": [100, 100000000, 100000000],
+      "expect": "pass"
+    },
+    {
+      "name": "fair_one_cent",
+      "function": "fair",
+      "args": [1, 100000000, 1000000],
+      "expect": "pass"
+    },
+    {
+      "name": "fair_ceil_tiny_price",
+      "function": "fair",
+      "args": [1, 1, 1],
+      "expect": "pass"
+    },
+    {
+      "name": "fair_rejects_zero_price",
+      "function": "fair",
+      "args": [100, 0, 0],
+      "expect": "fail"
+    },
+    {
+      "name": "fair_rejects_debt_cap",
+      "function": "fair",
+      "args": [1000001, 1, 1],
+      "expect": "fail"
+    },
+    {
+      "name": "need_two_tks_at_200",
+      "function": "need",
+      "args": [100, 100000000, 20000, 200000000],
+      "expect": "pass"
+    },
+    {
+      "name": "need_two_tks_short_one_sompi",
+      "function": "need",
+      "args": [100, 100000000, 20000, 199999999],
+      "expect": "fail"
+    },
+    {
+      "name": "need_one_cent_at_200",
+      "function": "need",
+      "args": [1, 100000000, 20000, 2000000],
+      "expect": "pass"
+    },
+    {
+      "name": "need_one_cent_short",
+      "function": "need",
+      "args": [1, 100000000, 20000, 1999999],
+      "expect": "fail"
+    },
+    {
+      "name": "need_zero_debt",
+      "function": "need",
+      "args": [0, 100000000, 20000, 0],
+      "expect": "pass"
+    },
+    {
+      "name": "need_liq_150",
+      "function": "need",
+      "args": [100, 100000000, 15000, 150000000],
+      "expect": "pass"
+    },
+    {
+      "name": "need_bonus_105",
+      "function": "need",
+      "args": [100, 100000000, 10500, 105000000],
+      "expect": "pass"
+    },
+    {
+      "name": "need_bonus_105_short",
+      "function": "need",
+      "args": [100, 100000000, 10500, 104999999],
+      "expect": "fail"
+    },
+    {
+      "name": "need_rejects_ratio_cap",
+      "function": "need",
+      "args": [1, 1, 50001, 5],
+      "expect": "fail"
+    },
+    {
+      "name": "need_max_ratio_ceil",
+      "function": "need",
+      "args": [1, 1, 50000, 5],
+      "expect": "pass"
+    },
+    {
+      "name": "need_max_ratio_ceil_short",
+      "function": "need",
+      "args": [1, 1, 50000, 4],
+      "expect": "fail"
+    },
+    {
+      "name": "underwater_just_below_150",
+      "function": "short",
+      "args": [100, 100000000, 15000, 149999999],
+      "expect": "pass"
+    },
+    {
+      "name": "not_underwater_at_150",
+      "function": "short",
+      "args": [100, 100000000, 15000, 150000000],
+      "expect": "fail"
+    },
+    {
+      "name": "seize_caps_bonus",
+      "function": "seize",
+      "args": [300000000, 105000000, 105000000, 195000000],
+      "expect": "pass"
+    },
+    {
+      "name": "seize_leaves_dust_when_tight",
+      "function": "seize",
+      "args": [120000000, 105000000, 100000000, 20000000],
+      "expect": "pass"
+    },
+    {
+      "name": "seize_splits_dust_floor",
+      "function": "seize",
+      "args": [40000000, 105000000, 20000000, 20000000],
+      "expect": "pass"
+    },
+    {
+      "name": "seize_rejects_below_two_dust",
+      "function": "seize",
+      "args": [30000000, 105000000, 10000000, 20000000],
+      "expect": "fail"
+    },
+    {
+      "name": "seize_rejects_cap_below_dust",
+      "function": "seize",
+      "args": [300000000, 19999999, 19999999, 280000001],
+      "expect": "fail"
+    }
+  ]
+}

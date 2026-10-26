@@ -1,0 +1,15 @@
+{
+  "name": "kas-vault-lab",
+  "private": true,
+  "type": "module",
+  "description": "TN10 overcollateralized vault lab. Not a stablecoin.",
+  "scripts": {
+    "test:ratio": "cli-debugger contracts/ratio.sil --run-all",
+    "test:vault": "cli-debugger contracts/vault.sil --run-all"
+  },
+  "dependencies": {
+    "@noble/curves": "1.9.7",
+    "@noble/hashes": "1.8.0",
+    "websocket": "1.0.35"
+  }
+}

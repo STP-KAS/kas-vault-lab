@@ -1,0 +1,63 @@
+pragma silverscript ^0.1.0;
+
+// Collateral math for the lab vault.
+// vault.sil copies fairSompi, atRatio, and the seize branch.
+// Those copies have to stay the same.
+
+contract Ratio() {
+    int constant MAX_DEBT = 1000000;
+    int constant MAX_PRICE = 10000000000;
+    int constant MAX_RATIO = 50000;
+    int constant DUST = 20000000;
+
+    function fairSompi(int cents, int price) : int {
+        require(cents >= 0);
+        require(cents <= MAX_DEBT);
+        require(price > 0);
+        require(price <= MAX_PRICE);
+        int fair = cents * price;
+        fair = (fair + 99) / 100;
+        return fair;
+    }
+
+    function atRatio(int cents, int price, int ratio) : int {
+        require(ratio > 0);
+        require(ratio <= MAX_RATIO);
+        int fair = fairSompi(cents, price);
+        int scaled = fair * ratio;
+        scaled = (scaled + 9999) / 10000;
+        return scaled;
+    }
+
+    entry fair(int cents, int price, int expect) {
+        require(fairSompi(cents, price) == expect);
+    }
+
+    entry need(int cents, int price, int ratio, int collateral) {
+        require(collateral >= atRatio(cents, price, ratio));
+    }
+
+    entry short(int cents, int price, int ratio, int collateral) {
+        require(collateral < atRatio(cents, price, ratio));
+    }
+
+    entry seize(int collateral, int cap, int expectSeized, int expectLeft) {
+        require(cap >= DUST);
+        require(collateral >= DUST + DUST);
+        int seized = 0;
+        int left = 0;
+        if (collateral >= cap + DUST) {
+            seized = cap;
+            left = collateral - cap;
+        } else {
+            seized = collateral - DUST;
+            left = DUST;
+        }
+        require(seized <= cap);
+        require(seized >= DUST);
+        require(left >= DUST);
+        require(seized + left == collateral);
+        require(seized == expectSeized);
+        require(left == expectLeft);
+    }
+}
