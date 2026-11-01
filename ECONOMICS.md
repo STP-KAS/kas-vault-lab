@@ -37,7 +37,11 @@ Each block is marked **fact** or **reasoning**.
 
 **Reasoning.** A receipt of sompi at an old quote is not a peg that survives a move in the KAS price. If KAS falls, the same sompi are a smaller dollar face. If KAS rises, they are a larger one. The face is historical. The coin amount is what the script, or the square ledger, returns.
 
-**Reasoning.** This lab does not make that receipt. Minting tUSD-TEST requires collateral at a fixed ratio of a signed price, and burning it is how the owner reduces debt and then withdraws. That is solvency of one vault. It does not defend a dollar price for a holder who does not own the vault. A holder redemption against the system, in the style of a redemption by any note holder, is the peg defense that does not need a business. This lab does not implement it. `PROPOSALS.md` asks for that distinction on the square. The covenant itself stays the per-vault instrument the task asked for.
+**Reasoning.** This lab does not make that receipt. Minting tUSD-TEST requires collateral at a fixed ratio of a signed price, and burning it is how the owner reduces debt and then withdraws. That is solvency of one vault. It does not defend a dollar price for a holder who does not own the vault. A holder redemption against the system, in the style of a redemption by any note holder, is the peg defense that does not need a business. As of this paragraph, `vault.sil` does not implement it. `PROPOSALS.md` asks for that distinction on the square. The covenant itself stays the per-vault instrument the task asked for.
+
+## Holder redeem, 1 Nov 2026
+
+**Fact.** `contracts/peg.sil` adds that redeem for one lineage. The payout is the stored quote, not a fresh signature. The surplus stays on the vault. The square files named above are not edited. The note is still not a dollar, because the quote is a lab key and the two contracts do not share a float. `STUDY.md` is the longer reasoning. `ISSUES.md` lists what is still open.
 
 ## Collateral, mint, burn, redeem
 

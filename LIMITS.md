@@ -35,3 +35,17 @@ A transaction id shows that one node accepted one shape, or rejected it. It does
 A local debugger pass shows the script's `require` lines. It does not show mempool policy, fee, or median time. The owner signature and the real oracle signature are checked on TN10 for the cases that need them.
 
 No mainnet coin moves. The keys under `.local/` are testnet keys. The fixture scalar 1 is not a wallet.
+
+## Peg contract, 1 Nov 2026
+
+The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.sil` is a second contract.
+
+**Fact.** `vaultRedeem` and `noteRedeem` pay `fairSompi(debt, quote)` to the note owner and leave the surplus on the vault output. They do not call `priceMessage`. The 27 Oct sentence "it does not let a stranger redeem" is true of `vault.sil` and false of this redeem, for the holder of that one note.
+
+**Fact.** Mint and both refresh entries still call `priceMessage`. The delayed-mining hole above still applies to those entries. Redeem does not close it for them.
+
+**Fact.** The redeem checks `outputs[0].value == inputs[0].value - pay` and returns the carrier on output 2. A fee taken from the lock fails that equality.
+
+**Fact.** `peg.sil` has no liquidation entry. A crash through the liquidation ratio is still the 27 Oct liquidate entries, on the other contract, not on this one.
+
+**Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. No peg transaction was submitted. `RESULTS.md` records that.

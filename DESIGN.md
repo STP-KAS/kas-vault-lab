@@ -118,3 +118,9 @@ The script requires `lockTime >= notBefore`, `lockTime <= expiry`, and `expiry -
 `contracts/vault.test.json`: 15 cases, all passed. Passing cases with no signature show the successor and the economics. Failing cases stop at the intended `require`: unsealed mint, mint above the ratio, stale lock time, a withdraw that breaks the ratio, forged debt on deposit, a bad oracle signature, a healthy vault presented for liquidation. The fixture oracle signature reaches the owner `checkSig` and fails there.
 
 Positive mint, seal, withdraw, and liquidate still need a real transaction signature. Those are accepted or rejected on TN10, and `RESULTS.md` records which.
+
+## Peg contract
+
+**Fact.** `contracts/peg.sil` is a second source. It does not change the entries above. Constructor order is the vault order plus `initQuote`. `quote` is sompi per 1.00. Seal requires `quote == 0`. Mint writes the signed price into both outputs and still requires the mint ratio. `refreshSolo` writes a quote when debt is 0. `refreshVault` and `refreshNote` write it when a note exists, without an owner signature, and they do not move sompi. `withdraw` uses the stored quote when debt remains. `vaultRedeem` and `noteRedeem` burn the whole note, pay `fairSompi` at that quote to the note owner's P2PK, return the carrier on the next output, and leave the surplus on the vault.
+
+**Fact.** A local `silverc` of `peg.sil` with `contracts/peg.args.json` wrote `compiler_version` `0.1.0` on 1 Nov 2026. The artifact is gitignored. `cli-debugger` was not on this desk for that run, so `peg.sil` has no debugger count next to the 15 vault cases. `node --test model/issues.test.mjs` is the run that was executed. It checks the integers and the DAG pictures. It does not execute the script.

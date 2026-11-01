@@ -56,3 +56,7 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 ## Checked again on 27 Oct 2026
 
 **Fact.** At 2026-10-27T18:17:42.372Z (27/10/2026, 19:17:42 CET) the same two payment paths were still closed. `GET https://api-tn10.kaspa.org/info/health` was HTTP 200 from `p2pId` `41d9296cd9daaa38c33fcfd74167b7288865a8d15630766ee6d9e3a301396bc8`, server version 2.1.0, synced, UTXO index on, server blue score 596282364, database blue score 596282302. No RPC virtual DAA was read with that sample. `GET https://faucet-tn10.kaspanet.io/` was HTTP 403 and the body contained "Just a moment...". Demo status was HTTP 200, `network` testnet-10, `enabled` true, `connected` true, `claims` 81, `pending` 1, `remainingClaims` 918, `amount` "1000000000". No transaction was submitted.
+
+## Peg contract, 1 Nov 2026
+
+**Fact.** `contracts/peg.sil` compiled with silverc `compiler_version` `0.1.0`. `node --test model/issues.test.mjs` passed 9 tests. No resolver was contacted. No faucet was asked. No transaction was built for the peg contract. There is no peg txid.
