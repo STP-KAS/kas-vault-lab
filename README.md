@@ -9,7 +9,7 @@ A covenant can lock test Kaspa and account a worthless note. Hashrate secures th
 | File | What it is |
 | --- | --- |
 | [ISSUES.md](ISSUES.md) | Each hard question, and whether the code answers it |
-| [STUDY.md](STUDY.md) | The 1 Nov 2026 study. Kept in full. Not a decision to ship |
+| [STUDY.md](STUDY.md) | The 1 Nov 2026 study, including why home ASICs are not part of the test |
 | [contracts/vault.sil](contracts/vault.sil) | The 27 Oct vault. Unchanged rules: one lineage, owner mint, liquidation |
 | [contracts/peg.sil](contracts/peg.sil) | Holder redeem at the stored quote. Mint still needs a fresh signature |
 | [model/issues.mjs](model/issues.mjs) | The integer checks for the questions a script cannot see |

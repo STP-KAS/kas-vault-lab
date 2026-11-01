@@ -12,6 +12,7 @@ Study questions from 1 Nov 2026. The 27 Oct files are still in the tree. `peg.si
 | One global vault on a 10-block-per-second DAG | Refused as a design. The model keeps two spends of one UTXO to a single acceptance, and two positions to two acceptances. Each lineage is its own id, as `DESIGN.md` already said. |
 | Who is paid when the including block goes red | Not scriptable. The model records the coinbase rule: a blue pays the finder, a red's reward pays the merger. A same-block "pay the miner who included this" output cannot name that person. |
 | Miner-only mint | Not built. The lock can be anyone's matured KAS. Gating the mint on a coinbase script would hand it to pools. |
+| Home IceRiver ASICs and their pools | Not used. They find KAS and the pool pays KAS. They cannot mint, redeem, or hold the quote. A pool rebate in some other token is the pool's own ledger. `STUDY.md` records why the machines stay on their current work. |
 | Seigniorage, rebase, or a separate chain | Not built. They do not fix the peg. |
 | Oracle | Open. The signer is still a key. A hashrate vote on the price is not used. A ZK proof of a published price is not in this repo. |
 | The note cannot pay the miner by itself | Open as a shop fact. The carrier is 0.2 tKAS and is returned to the holder. It is not spent as the fee. A note with an empty sleeve still needs sompi beside it. |

@@ -63,6 +63,16 @@ A kilowatt-hour you can redeem: no construction in this study.
 
 The model checks the rest: the month index ignores hashrate, the haircut is real, a one-third gap breaks a 1.5 ratio, two positions settle together, one shared UTXO does not, and a red reward goes to the merger.
 
+## Home machines
+
+**Fact.** IceRiver Kaspa ASICs hash kHeavyHash and join a pool over stratum. The worker is a `kaspa:` address. K1Pool's Kaspa guide pays KAS on a schedule. F2Pool lists KAS as PPLNS. The Kaspa wiki describes the pool taking the block and paying the miners by its own rule (PPLNS, PPS, and the rest). A solo port on a pool still publishes the block for you and pays you from the pool. The ASIC never spends a covenant.
+
+**Fact.** Kat Pool advertises a second payout, NACHO, as a rebate from the pool's fee. That credit is the pool's ledger. It is not a coinbase output and not a vault redeem.
+
+**Reasoning.** Pointing a home ASIC at `peg.sil` does not test the peg. The machine can only win KAS. After the coinbase matures, a wallet can lock that KAS. The wallet step is the whole experiment, and it does not need the ASIC in the room. Moving a mainnet machine onto testnet would stop its KAS work. Testnet hashing is a CPU or GPU job. This study does not change a pool setting and does not name a home worker.
+
+**Reasoning.** The same machines make the pool-gated mint concrete. The address that receives the payout is the pool's customer account, or the pool's own coinbase. If only that address could mint, the pool would be the issuer. `peg.sil` does not have that gate. Anyone who already holds sompi can lock them.
+
 ## Left open
 
 The quote is a signature, not a market and not a proof. Finality is longer than acceptance. The note's carrier is not a fee. Two vault ids are two notes. `peg.sil` does not liquidate and was not broadcast. A passing model test is not a node.
