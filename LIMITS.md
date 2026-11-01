@@ -55,3 +55,5 @@ The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.s
 **Reasoning.** A Kaspa UTXO is as hard to rewrite as the chain it sits in. That hardness is the history. A price in an outside unit is a number someone has to supply. Years of proof of work on Bitcoin did not write that number into the protocol. A mined face that follows hashrate gives the largest pools the largest new inventory. The model shows the share. It does not show a rule that can cap a person, because the chain has no person. This study does not claim a stablecoin.
 
 **Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. No peg transaction was submitted. `RESULTS.md` records that.
+
+**Fact.** On the private devnet, after virtual DAA 1197, a mature free output spent and the paired lock did not. Waiting out coinbase maturity did not turn the stored face into a payment or a price.

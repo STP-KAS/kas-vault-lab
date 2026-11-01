@@ -1,8 +1,58 @@
 # kas-vault-lab
 
-Experimental only. Not Kaspa Dollar. Not a product. Not money. Not an endorsement of a mined dollar.
+Intentions are good; thought process is questionable.
 
-A covenant can lock test Kaspa and account a worthless note. Hashrate secures that record. The note is backed by the locked sompi, and only while a quote says those sompi cover the debt. Electricity is not a balance anyone can redeem.
+Experimental only. This is a study. We are not claiming a stablecoin, a product, or money. This is not Kaspa Dollar, and it is not an endorsement of a mined dollar.
+
+## What we are doing
+
+We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a covenant that has not been broadcast, a short public testnet sample, and a private devnet whose coinbase pays KAS and locks the rest.
+
+## Why
+
+Kaspa already orders transactions, fast, under proof of work. A unit people can invoice in is a reason to settle here. A company coin can be sequenced by that proof of work and still be a company coin. A hard fork that wants a decentralized unit has to stand without that company. Electricity secures the record. It is not a balance anyone can redeem. The price of KAS in another unit is a number someone still has to supply.
+
+## Where and when
+
+| When | Where | What happened |
+| --- | --- | --- |
+| 27 Oct 2026 | Public TN10, this repo | A covenant lab. `vault.sil` locks test KAS and accounts a worthless note. The rules are unchanged. |
+| 1 Nov 2026 | This repo | The study, the doors, and the integer model. No new chain rule in this repository. |
+| 1 Nov 2026 | Public TN10, about half a minute, two CPU threads | Ordinary sompi coinbases. The miners were stopped. No patch. |
+| 1 Nov 2026 | Private devnet, localhost only, three addresses, one thread each | 25 blocks. Half the subsidy locked under an `STP1` script. All of it immature. The fork was not pushed. |
+| 1 Nov 2026 | The same notes, no new blocks | Schedule, holdings, and a shared pot. The model only. |
+| 1 Nov 2026 | The same private devnet, six CPU threads, then one confirming block | Block count and virtual DAA went from 25 to 1196, then to 1197. Mature KAS was spent. The node rejected the lock. |
+
+The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it. They hash for KAS. They do not lock, mint, or redeem.
+
+## The ideas, still open
+
+These are different promises. None of them has been chosen as a product.
+
+- A receipt returns the same sompi. The holder keeps KAS volatility.
+- A person locks KAS they already hold. Each lock is its own UTXO. The miner is paid the full KAS reward. Redeem needs a quote. That quote is unsolved. `peg.sil` is this shape, and it has not been broadcast.
+- A coinbase can lock part of the subsidy and store a face. The private devnet ran this at half, so both outputs were large enough to see. Half is a lab size. After maturity the free KAS spent like ordinary KAS, and the node rejected the lock. The face is not a coin a wallet can send. This is not a public rule.
+- A shared pot of many keys can refuse one signature. Every holder then waits. That is a freeze. It is not built.
+- A company can mint against reserves and redeem the reserve asset, and can keep a freeze at its own door. That door is not the proof of work. It is not built here.
+- A rollup puts a sequencer back in front of the payments. Refused as an ordering design.
+
+## Pushback
+
+A few sentences in this work were wrong, or too final.
+
+- Calling the devnet face a stablecoin was wrong. The price in the script is the constant 1. The node refused to spend the lock. The error was `stack contains 4 unexpected items`.
+- Half the subsidy is not "a little." It was chosen so both lines moved.
+- "As secure as Kaspa" fits a Kaspa UTXO. It does not fit a price. Bitcoin's record from genesis on 3 Jan 2009 to 1 Nov 2026 is 17 years and 302 days, 6511 days. From the white paper on 31 Oct 2008 it is 18 years and 1 day, 6575 days. Those years did not put a dollar price into the protocol. In August 2010 an overflow was removed by reorganizing onto a patched binary. The years are an operating record.
+- A pot of 20,000 keys is not a safe place. The model says 19,999 signatures do not move it.
+- Miners declining to dump a note because dumping would hurt them is a wish. It is not a rule. The chain has no person to cap. A pool is one script.
+- An earlier note said another sample of the same coinbase would only repeat the haircut. That stopped short. Maturity and a spend had not been tried. They have been tried. The free half spends. The locked half does not.
+- The balance reader dropped one face after the free output of that same coinbase was spent. The reader only counts a coinbase while an address output of it remains. The second rejection from the node is the evidence that the lock was still there.
+
+## What is still open
+
+The quote. A stale mint window. Finality. Two covenant lineages that are not one currency. `peg.sil` does not liquidate, and it has no transaction id. The devnet lock still cannot pay. A smaller diversion than half has not been run. Kaspa's own subsidy already ends, after 426 month entries, and the v2.1.0 test expects 0 after 36 yearly steps. This study does not lengthen that table. A never-ending mined face would be a second monetary policy.
+
+The path that stays inside the constraints is the voluntary lock, the full KAS reward, and no freeze. The coinbase split stays on the list because the bytes were run, the free half was spent, and the lock was rejected. Both stay open as studies. Neither is a claim.
 
 ## Read in this order
 
@@ -18,7 +68,7 @@ A covenant can lock test Kaspa and account a worthless note. Hashrate secures th
 | [LIMITS.md](LIMITS.md) | What is still not a stablecoin |
 | [ECONOMICS.md](ECONOMICS.md) | How this differs from the square's receipts |
 | [PROPOSALS.md](PROPOSALS.md) | Sentences for the square. This repo does not patch that tree |
-| [RESULTS.md](RESULTS.md) | What was and was not submitted. No peg txid. A short CPU sample mined ordinary tKAS. A later private devnet paid KAS and a locked STP face. A later model pass checks the schedule, the haircut, the face share, and a shared pot |
+| [RESULTS.md](RESULTS.md) | What was and was not submitted. No peg txid. Public TN10 paid ordinary tKAS. The private devnet paid KAS and a locked face, then spent the mature KAS and rejected the lock |
 
 ## Run
 

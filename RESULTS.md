@@ -96,3 +96,21 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 **Fact.** `peg.sil` was not broadcast. The public TN10 node was not stopped. The private devnet was not given a peer. No private key was loaded.
 
 **Reasoning.** Another sample of the same coinbase would repeat the haircut. It would not say whether a shared pot can refuse a holder, or whether issuance on the coinbase path continues after the subsidy is 0. The model answers those two. `STUDY.md` records why the voluntary lock, the full KAS reward, and no freeze are the combination that stays inside the constraints, and why the coinbase split stays a measured private-devnet result. This is a study. It does not claim a stablecoin.
+
+The sentence above stopped short. Maturity and a spend had not been run. The next section runs them.
+
+## Six threads, then a spend, 1 Nov 2026
+
+**Fact.** The same private devnet was still up. Public TN10 was still up. No peer was added. The node was not rebuilt. Six CPU processes, two on each of the three addresses already in `RESULTS.md`, each stopped itself after 200 `Success` reports. The logged rates were about 0.53 MH/s. The error logs were empty. Before this stage the node reported `blocks=25` and `virtual_daa=25`. After the six processes exited it reported `blocks=1196` and `virtual_daa=1196`. This note does not explain the gap between 1200 success reports and 1171 new blocks.
+
+**Fact.** The address index then showed mature KAS of 1386, 1364, and 1452, and immature KAS of 7524, 7568, and 6974. The reader's STP faces were 938.66666624 mature and 5001.33333106 immature for the first address, 938.66666624 and 5030.66666438 for the second, and 982.66666622 and 4634.66666456 for the third. 1386 KAS is 63 rewards of 22 KAS. 938.66666624 is 64 faces. The reader dates an STP face from the coinbase header. The node dates the spendable output from the UTXO entry. Those two clocks are not the same block.
+
+**Fact.** A spend of the oldest mature free output, 2200000000 sompi, with a fee of 10000 sompi, was rejected: transaction `e97c0d2018e4ce2b4c2101e164588d4adb4b3bd1033ceed37398e10e936cc78f` had 10000 fees, under the required 162400 for compute mass 1624. The same output with a fee of 200000 sompi was accepted as `0fb957c5f8a39be1809b4d4774f1e5dac9a727aadcb4526a09a4edf5da6a19f9`. The UTXO entry's DAA was 4. One further CPU block was mined so the mempool transaction could confirm. The node then reported `blocks=1197` and `virtual_daa=1197`.
+
+**Fact.** After that block, the first address had mature KAS 1364 and immature KAS 7524. The second had mature KAS 1385.998 and immature KAS 7590. The third had mature KAS 1452 and immature KAS 6996. 1385.998 is 1364 plus 21.998. The 0.002 KAS is the 200000 sompi fee. The second and third addresses each gained 22 immature KAS from the confirming block's coinbase. The first address did not.
+
+**Fact.** A spend of the STP output in the coinbase whose header DAA is 1, locked sompi 2200000000, face 1466666666, was rejected: transaction `2aa83f1084914bd99934f81cd504606d75ef0987da352ef6759d272ecd35b80c`, `failed to verify the signature script: stack contains 4 unexpected items`. The same transaction was submitted again after the free output had confirmed. The node returned the same rejection. The spend program is local to the unpushed fork. It was not published. No private key is in this repo.
+
+**Fact.** The reader's mature STP face for the first address fell from 938.66666624 to 923.99999958, which is one face. The reader counts an STP output only while that coinbase still has an output in the address index. Spending the free output removed the coinbase from that index. The node's second rejection is the evidence the lock was still present. `peg.sil` was not broadcast.
+
+**Reasoning.** The free half, once mature, is ordinary KAS. The locked half is not a coin. Crossing 1000 DAA did not create a price, a redeem, or a transferable face. It did answer the question the 25-block run had to leave open. Six threads on three addresses are still one operator. They are not many independent lockers.

@@ -38,7 +38,7 @@ A receipt is the most decentralized and the least useful as an invoice. A freeze
 
 None of these is "the best" in the abstract. They answer different jobs. They can sit beside each other only if a freeze in one cannot reach the others, and cannot reach KAS.
 
-A later pass added the committee pot and pointed the subsidy-split row at the private devnet. The row stays refused as a public rule. The pot is refused because a shared signature is a shared freeze. The vault row is unchanged.
+A later pass added the committee pot and pointed the subsidy-split row at the private devnet. The row stays refused as a public rule. The pot is refused because a shared signature is a shared freeze. The vault row is unchanged. A six-thread stage on that same devnet crossed coinbase maturity. The free KAS was spent. The node rejected the lock. `RESULTS.md` has the ids.
 
 ## What a Tether-like issuer can do here
 
