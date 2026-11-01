@@ -10,6 +10,7 @@ A covenant can lock test Kaspa and account a worthless note. Hashrate secures th
 | --- | --- |
 | [ISSUES.md](ISSUES.md) | Each hard question, and whether the code answers it |
 | [STUDY.md](STUDY.md) | The 1 Nov 2026 study, including why home ASICs are not part of the test |
+| [DOORS.md](DOORS.md) | Ordering versus the issuer's key. Every door kept. Decentralization is the measure |
 | [contracts/vault.sil](contracts/vault.sil) | The 27 Oct vault. Unchanged rules: one lineage, owner mint, liquidation |
 | [contracts/peg.sil](contracts/peg.sil) | Holder redeem at the stored quote. Mint still needs a fresh signature |
 | [model/issues.mjs](model/issues.mjs) | The integer checks for the questions a script cannot see |
@@ -24,7 +25,7 @@ A covenant can lock test Kaspa and account a worthless note. Hashrate secures th
 Issues model, no node and no key:
 
 ```
-node --test model/issues.test.mjs
+node --test model/issues.test.mjs model/doors.test.mjs
 ```
 
 Compile the peg contract. The JSON artifact is gitignored, same as `vault.json`.

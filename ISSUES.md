@@ -20,3 +20,7 @@ Study questions from 1 Nov 2026. The 27 Oct files are still in the tree. `peg.si
 | Crash through the ratio | Open. At 1.5x, the model marks a gap larger than one third as insolvent. Liquidation of that case remains the 27 Oct entries in `vault.sil`. `peg.sil` does not liquidate. |
 | Two lineages, one currency | Open. Notes from two ids are not one float. A holder redeems against the vault that issued the note. |
 | One note per vault | Kept. Redeem is full. A partial note would be a second output and a new invariant. |
+| Ordering versus the issuer's door | Written in `DOORS.md`. Miners order. A key that freezes a circulating note is still a key after the note is a Kaspa covenant. Inclusion is not success. The model checks that. |
+| A Tether-like issuer on Kaspa | Possible as sequencing. The decentralized practice is a sealed script, no freeze on notes already in circulation, mint and redeem only at the company's door, miners paid in KAS, any relayer allowed to front the sompi. The bank stays the bank. Not built as a contract. |
+| Open relayer so a holder of only the note can pay | In the model. The relayer spends KAS, the miner receives that KAS, the user spends notes. The relayer is not a sequencer. A covenant for it is not in `peg.sil`. |
+| One winner among the doors | Not chosen. Receipt, vault, door-only issuer, and freeze token are different promises. A freeze in one must not reach the others or reach KAS. |

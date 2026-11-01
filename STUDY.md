@@ -76,3 +76,7 @@ The model checks the rest: the month index ignores hashrate, the haircut is real
 ## Left open
 
 The quote is a signature, not a market and not a proof. Finality is longer than acceptance. The note's carrier is not a fee. Two vault ids are two notes. `peg.sil` does not liquidate and was not broadcast. A passing model test is not a node.
+
+## Continued
+
+The question after this study is not which single unit should exist. `DOORS.md` keeps every door and separates ordering from the issuer's key. Miners already order Kaspa. A company that wants its unit sequenced here can have that. It cannot hand the miners its bank and call the result decentralized. A freeze inside circulating transfers stays a freeze, on this chain as on any other.
