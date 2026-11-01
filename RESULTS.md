@@ -74,3 +74,15 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 **Fact.** After the sample, `/info/hashrate` was about `1.343e-5`. Read as terahash per second, that is about 13.4 MH/s. `/info/blockdag` named `kaspa-testnet-10` and a difficulty near 671481. Two threads at about 4.3 MH/s are on the order of thirty percent of that hashrate reading for the half minute they ran. They were stopped there. The rest of the CPU was not started.
 
 **Reasoning.** A larger share of public TN10 would still be sompi, because this kaspad builds the coinbase the network already expects. A different coinbase needs different node software, and nodes that keep the old rule would reject it. That split was not started. There is still no peg txid.
+
+## Private devnet, 1 Nov 2026
+
+**Fact.** The TN10 kaspad was left running. A separate binary, rusty-kaspa `v2.1.0` commit `01b532e8` plus a local devnet-only coinbase patch, was started with its own data directory. RPC and peer ports were bound to localhost. DNS seeding was off. UPnP was off. No peer was added. The patch was not pushed. The TN10 binary was not replaced.
+
+**Fact.** The devnet rule locks half the subsidy and pays the other half, plus fees, as KAS. The STP face is `subsidy * 5000 / 15000` with the price constant 1. On this devnet the paid reward was 4400000000 sompi, so each accepted reward was 2200000000 sompi of KAS and 2200000000 locked sompi, with face 1466666666. The lock is the `STP1` script in `STUDY.md`. It ends in `OP_FALSE`.
+
+**Fact.** Three new addresses, one CPU thread each, submitted to that node. One address submitted a first block, then each address submitted 8. Every submit in those logs returned success. The miners exited. The node reported `blocks=25` and `virtual_daa=25`. The addresses were `kaspadev:qp6zjhkx4z4j9tnqjttsg9ylhwwnmn2snu4re6pynxyyzwlpmf7uwsgjlwp8l`, `kaspadev:qpnayvcujj42uh8ct0kz6npqrh9rekudmre22cw473l8aguqq7wxcaeg0ju52`, and `kaspadev:qqjpnvtfkdc0zp84ph9xhk64mt530kamdd9v4wszuxfuvrks6j3qu5hct3g6f`. No private key is in this repo.
+
+**Fact.** The UTXO index, after those submits, showed immature KAS of 19800000000, 15400000000, and 17600000000 sompi. The accepted coinbases that created those outputs also carry STP faces of 13199999994, 10266666662, and 11733333328. That is 9, 7, and 8 rewards. 24 rewards are in the UTXO set. The remaining block has not been paid by a later block. Maturity is 1000 DAA, so none of this is spendable yet. Block `f04f163ddf87bdb0b63c760b85102f358af533b8b09d4dbde57f0ab44c3ecd93` (DAA 1) is one of those accepted coinbases: locked sompi 2200000000, face 1466666666.
+
+**Reasoning.** These threads are the only hash on this devnet, so the blocks they found are the chain. A public node that does not run this patch will not accept the blocks. The face uses a constant, not a market and not a vote of the miners. The locked sompi cannot be spent by the script as written. STP here is a number stored beside the lock, not a coin a stock wallet can send. `peg.sil` was not broadcast. There is still no peg txid.

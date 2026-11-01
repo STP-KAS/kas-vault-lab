@@ -4,7 +4,7 @@ Study questions from 1 Nov 2026. The 27 Oct files are still in the tree. `peg.si
 
 | Issue | Where it stands |
 | --- | --- |
-| A second coin in the coinbase | Not built. The coinbase pays sompi. Putting another asset there is a hard fork. The model shows the subsidy split pays less than KAS. |
+| A second coin in the coinbase | Not built on a public net. The coinbase there pays sompi. Putting another asset there is a hard fork. The model shows the subsidy split pays less than KAS. A private devnet ran that split on 1 Nov 2026. The STP row below has the run. |
 | Electricity as the reserve | Not possible here. Issuance month is DAA divided by blocks per second. Hashrate is not an input. A kilowatt-hour is not a redeemable output of kHeavyHash. |
 | Holder redeem, so a swap does not reprice the note | In `peg.sil`. Burning the note pays `fairSompi(debt, quote)` to the note owner. Surplus stays in the vault. `vault.sil` still has no stranger redeem. |
 | Stale quote: stop mint, leave redeem open | Half. Redeem does not take a new oracle signature. Mint and refresh do. The script still cannot read the spending block's DAA. A mint signed inside the window can be mined later. `LIMITS.md` already recorded that hole. |
@@ -25,3 +25,4 @@ Study questions from 1 Nov 2026. The 27 Oct files are still in the tree. `peg.si
 | Open relayer so a holder of only the note can pay | In the model. The relayer spends KAS, the miner receives that KAS, the user spends notes. The relayer is not a sequencer. A covenant for it is not in `peg.sil`. |
 | One winner among the doors | Not chosen. Receipt, vault, door-only issuer, and freeze token are different promises. A freeze in one must not reach the others or reach KAS. |
 | Fifty-five percent of TN10, then a hard fork, so a second coin shows in the wallet | Not done. Two one-thread miners ran about half a minute on public TN10 and were stopped. The public API shows ordinary sompi coinbases for both addresses. A larger share on this kaspad still pays sompi. No kaspad patch. No new wallet. The two block hashes are in `RESULTS.md`. |
+| The same split on a private devnet, named STP | Run on 1 Nov 2026. A local `v2.1.0` devnet, with no peers, pays half the subsidy as KAS and locks the other half under an `STP1` script. The face is the studied integer, price constant 1, ratio 1.5. Three addresses received 24 immature rewards. The lock does not spend. Public TN10 was not patched. `RESULTS.md` has the sompi. |
