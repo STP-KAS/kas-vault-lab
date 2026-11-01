@@ -49,6 +49,18 @@ test("a subsidy split cuts the miners", () => {
   assert.equal(cut.fits, false);
 });
 
+test("a shared pot that can refuse a signature is not bearer", () => {
+  const pot = read(shape("committee", {
+    ...onKaspa,
+    freezeCirculating: true,
+    priced: true,
+    subsidyHaircut: 1,
+  }));
+  assert.equal(pot.circulatingBearer, false);
+  assert.equal(pot.minersUncut, false);
+  assert.equal(pot.fits, false);
+});
+
 test("a rollup sequencer is not Kaspa ordering", () => {
   const rollup = read(shape("rollup", {
     orderedByMiners: true,

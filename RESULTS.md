@@ -86,3 +86,13 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 **Fact.** The UTXO index, after those submits, showed immature KAS of 19800000000, 15400000000, and 17600000000 sompi. The accepted coinbases that created those outputs also carry STP faces of 13199999994, 10266666662, and 11733333328. That is 9, 7, and 8 rewards. 24 rewards are in the UTXO set. The remaining block has not been paid by a later block. Maturity is 1000 DAA, so none of this is spendable yet. Block `f04f163ddf87bdb0b63c760b85102f358af533b8b09d4dbde57f0ab44c3ecd93` (DAA 1) is one of those accepted coinbases: locked sompi 2200000000, face 1466666666.
 
 **Reasoning.** These threads are the only hash on this devnet, so the blocks they found are the chain. A public node that does not run this patch will not accept the blocks. The face uses a constant, not a market and not a vote of the miners. The locked sompi cannot be spent by the script as written. STP here is a number stored beside the lock, not a coin a stock wallet can send. `peg.sil` was not broadcast. There is still no peg txid.
+
+## Schedule and holdings, 1 Nov 2026
+
+**Fact.** This pass did not start a second devnet, did not restart the miners, and did not rebuild the node. The 25-block run already paid the same split. The questions in this pass are who receives a mined face, when that face stops, where diverted sompi can sit, and what a long proof-of-work record does and does not price. Those checks are in the model.
+
+**Fact.** `node --test model/issues.test.mjs model/doors.test.mjs` is the run for this pass. It checks 6575 days from 31 Oct 2008 to 1 Nov 2026, and 6511 days from 3 Jan 2009 to that date. At the devnet constants, `redeemMined` returns 3666666666 sompi to a finder who redeems at once, against a 4400000000 sompi subsidy, and leaves 733333334 sompi as surplus. `faceShare` of 4 equal blocks in 6 is 4/6 of the new face. `supplyOf("coinbase", 0, ...)` is 0. `supplyOf("lock", 0, 2200000000, ...)` is 2200000000. `potMoves(19999, 20000)` is false. `potMoves(1, 1)` is true.
+
+**Fact.** `peg.sil` was not broadcast. The public TN10 node was not stopped. The private devnet was not given a peer. No private key was loaded.
+
+**Reasoning.** Another sample of the same coinbase would repeat the haircut. It would not say whether a shared pot can refuse a holder, or whether issuance on the coinbase path continues after the subsidy is 0. The model answers those two. `STUDY.md` records why the voluntary lock, the full KAS reward, and no freeze are the combination that stays inside the constraints, and why the coinbase split stays a measured private-devnet result. This is a study. It does not claim a stablecoin.

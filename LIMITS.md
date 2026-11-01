@@ -48,4 +48,10 @@ The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.s
 
 **Fact.** `peg.sil` has no liquidation entry. A crash through the liquidation ratio is still the 27 Oct liquidate entries, on the other contract, not on this one.
 
+## A hard record is not a stable price
+
+**Fact.** The day counts, the devnet redeem integers, the 4-of-6 face share, the zero-subsidy face, and the 20000-of-20000 pot are model checks. They do not execute `peg.sil`. They do not move a market.
+
+**Reasoning.** A Kaspa UTXO is as hard to rewrite as the chain it sits in. That hardness is the history. A price in an outside unit is a number someone has to supply. Years of proof of work on Bitcoin did not write that number into the protocol. A mined face that follows hashrate gives the largest pools the largest new inventory. The model shows the share. It does not show a rule that can cap a person, because the chain has no person. This study does not claim a stablecoin.
+
 **Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. No peg transaction was submitted. `RESULTS.md` records that.

@@ -28,7 +28,8 @@ A pool that pays a bonus token from its own books is the same shape at a smaller
 | --- | --- | --- | --- | --- | --- | --- |
 | Receipt | Miners | Bearer. The sompi are fixed | None | KAS fee | No. The face moves with KAS | The square, not this covenant |
 | Vault study | Miners | Bearer. Redeem at the stored quote | The quote signer | KAS fee. Surplus stays in the lock | Only while the quote is honest | `peg.sil` |
-| Subsidy split | Miners, after a hard fork | Bearer if no freeze is added | The new consensus rule | Less than the KAS reward | Only if collateral covers it | Refused. The model shows the haircut |
+| Subsidy split | Miners, after a hard fork | Bearer if no freeze is added | The new consensus rule | Less than the KAS reward | Only if collateral covers it | Refused as a public rule. The model shows the haircut. A private devnet ran the bytes. `RESULTS.md` |
+| Committee pot | Miners, if they order the deposit | Not bearer. Too few signatures and the pot does not move | The signer set | Less KAS, if the reward was diverted into the pot | No | Refused. One pot for many holders is a freeze |
 | Freeze token | Miners, if it is a Kaspa covenant | Not bearer. A key can stop a spend and can destroy a balance | The issuer | KAS fee, and volume may be large | Yes, until a freeze | Not built |
 | Door-only issuer | Miners | Bearer once it is in circulation | The issuer, at mint and redeem only | KAS fee | Yes, if the issuer honors redeem | Not built. This is the practice below |
 | Rollup | A sequencer, then a digest on Kaspa | Whatever the sequencer's chain says | The sequencer and the issuer | The data fee, not the payments | Yes | Refused as an ordering design |
@@ -36,6 +37,8 @@ A pool that pays a bonus token from its own books is the same shape at a smaller
 A receipt is the most decentralized and the least useful as an invoice. A freeze token is the most familiar dollar and the least bearer. A subsidy split looks like the miners issue the unit. The arithmetic says they are paid less KAS to do it. The vault is the decentralized collateral door this lab can actually express, and the quote key remains. The door-only issuer is the decentralized practice available to a company that already holds bank reserves.
 
 None of these is "the best" in the abstract. They answer different jobs. They can sit beside each other only if a freeze in one cannot reach the others, and cannot reach KAS.
+
+A later pass added the committee pot and pointed the subsidy-split row at the private devnet. The row stays refused as a public rule. The pot is refused because a shared signature is a shared freeze. The vault row is unchanged.
 
 ## What a Tether-like issuer can do here
 

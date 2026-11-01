@@ -18,7 +18,7 @@ A covenant can lock test Kaspa and account a worthless note. Hashrate secures th
 | [LIMITS.md](LIMITS.md) | What is still not a stablecoin |
 | [ECONOMICS.md](ECONOMICS.md) | How this differs from the square's receipts |
 | [PROPOSALS.md](PROPOSALS.md) | Sentences for the square. This repo does not patch that tree |
-| [RESULTS.md](RESULTS.md) | What was and was not submitted. No peg txid. A short CPU sample mined ordinary tKAS. A later private devnet paid KAS and a locked STP face |
+| [RESULTS.md](RESULTS.md) | What was and was not submitted. No peg txid. A short CPU sample mined ordinary tKAS. A later private devnet paid KAS and a locked STP face. A later model pass checks the schedule, the haircut, the face share, and a shared pot |
 
 ## Run
 

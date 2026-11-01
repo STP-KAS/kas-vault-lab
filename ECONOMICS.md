@@ -108,3 +108,19 @@ https://github.com/kaspanet/rusty-kaspa/pull/1152
 **Reasoning.** Later, a core oracle, a zk opcode, or a shared covenant family with real KCC-20 transfer could change the design. None of those is assumed. A social post about a decentralized Kaspa dollar is not a spec. The 26 Oct 2026 post by `@Rumbo_A_La_Cima` describes the idea in Spanish and does not define a collateral rule. No Kaspa Commons design post was found for this file.
 
 https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
+
+## Two ways to fund a note, 1 Nov 2026
+
+**Fact.** The devnet coinbase paid 2200000000 sompi as KAS and locked 2200000000 sompi, with face 1466666666, out of a 4400000000 sompi subsidy. `redeemMined` in the model, at price 1, returns 1466666666 of the lock and leaves 733333334. The finder who redeems at once holds 3666666666 sompi, against an unsplit 4400000000. Fees were zero in that example. The devnet lock cannot be spent.
+
+**Fact.** `faceShare(4, 6, ...)` gives the finder 4/6 of the new face when every block pays the same subsidy. `supplyOf("coinbase", 0, ...)` is 0. `supplyOf("lock", 0, 2200000000, ...)` is 2200000000. The lock path does not read the subsidy. The coinbase path stops producing a face when the subsidy does.
+
+**Fact.** `potMoves(19999, 20000)` is false. `potMoves(1, 1)` is true.
+
+**Reasoning.** Miners sell what they are paid. If they are paid the note, the note's first market is the miners' sell orders, and the buyers are whoever wants the redeem right. That is a distribution method. It is also a concentration method. Hash replaces the Tether desk as the minter, and the largest pools become the largest first holders. Their sell can move the price of the note and, after redeem, the price of KAS. The script can stop them from taking another holder's lock. It cannot stop them from selling their own.
+
+**Reasoning.** If the miner is paid only KAS, the security budget stays the Kaspa schedule, including the year it reaches zero and fees are what remains. People who want a note lock KAS they bought or mined. Issuance then follows willingness to lock, at the ratio, and it stops when they stop. A large miner who wants a large note has to buy KAS and lock it, or buy the note from someone who did. That is the same market every other holder faces.
+
+**Reasoning.** The buffer in the 1.5 ratio is the 733333334 sompi that an immediate redeem does not return. It is the cost of surviving a drop in the quote, up to the gap `survivesGap` already checks. It is not income. Calling it a second reward double-counts a sompi that the holder cannot take.
+
+**Reasoning.** A treasury key, one key or twenty thousand, that must sign before the sompi move, is the Tether desk written as a script. The economics of Tether that this lab can use without that desk are only the two rules above: mint against new collateral, and redeem the collateral asset at the published terms. The attestations, the bank, and the blacklist are the desk. They stay in `DOORS.md` as the door-only issuer, which is allowed to exist and is labeled as a company.

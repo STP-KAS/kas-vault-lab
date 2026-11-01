@@ -80,3 +80,56 @@ export function rewardRecipient(color, finder, merger) {
   if (color === "red") return merger;
   throw new Error("bad color");
 }
+
+// UTC midnights. The caller passes calendar dates. This is not a security proof.
+export function utcDays(startDate, endDate) {
+  const start = Date.parse(`${startDate}T00:00:00Z`);
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) throw new Error("bad dates");
+  return Math.round((end - start) / 86_400_000);
+}
+
+// Same integers as the devnet coinbase. Price is quote-units per sompi, before the ratio.
+// face = subsidy * alpha * price / cr. Fees stay in the free output.
+export function splitReward(subsidy, fees, alphaBps, price, crBps) {
+  if (subsidy < 0 || fees < 0 || price <= 0 || crBps <= 0) throw new Error("bad split");
+  if (alphaBps < 0 || alphaBps > 10_000) throw new Error("bad alpha");
+  const diverted = Math.floor((subsidy * alphaBps) / 10_000);
+  const free = subsidy - diverted + fees;
+  const face = Math.floor((subsidy * alphaBps * price) / crBps);
+  return { free, diverted, face };
+}
+
+// Redeem the face at once. The surplus stays locked. minerKas is what the finder holds after that.
+export function redeemMined(subsidy, fees, alphaBps, price, crBps) {
+  const parts = splitReward(subsidy, fees, alphaBps, price, crBps);
+  const kasBack = Math.floor(parts.face / price);
+  if (kasBack > parts.diverted) throw new Error("redeem exceeds the lock");
+  return {
+    ...parts,
+    kasBack,
+    surplus: parts.diverted - kasBack,
+    minerKas: parts.free + kasBack,
+  };
+}
+
+// Equal blocks. Face paid to the finder is the finder's share of the blocks.
+export function faceShare(found, totalBlocks, subsidy, alphaBps, price, crBps) {
+  if (!Number.isInteger(found) || !Number.isInteger(totalBlocks)) throw new Error("bad share");
+  if (found < 0 || found > totalBlocks || totalBlocks <= 0) throw new Error("bad share");
+  const one = splitReward(subsidy, 0, alphaBps, price, crBps).face;
+  return { face: one * found, all: one * totalBlocks };
+}
+
+// coinbase supply follows the subsidy. A voluntary lock follows the sompi someone locked.
+export function supplyOf(path, subsidy, locked, alphaBps, price, crBps) {
+  if (path === "coinbase") return splitReward(subsidy, 0, alphaBps, price, crBps).face;
+  if (path === "lock") return locked;
+  throw new Error("bad path");
+}
+
+// A shared pot moves only when enough signatures are present.
+export function potMoves(signatures, required) {
+  if (required <= 0 || signatures < 0) throw new Error("bad pot");
+  return signatures >= required;
+}
