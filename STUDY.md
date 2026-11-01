@@ -80,3 +80,9 @@ The quote is a signature, not a market and not a proof. Finality is longer than 
 ## Continued
 
 The question after this study is not which single unit should exist. `DOORS.md` keeps every door and separates ordering from the issuer's key. Miners already order Kaspa. A company that wants its unit sequenced here can have that. It cannot hand the miners its bank and call the result decentralized. A freeze inside circulating transfers stays a freeze, on this chain as on any other.
+
+## Put on the node
+
+**Fact.** On 1 Nov 2026 the live check was whether a TN10 block found by this desk is still only sompi. It is. Two public addresses, one thread each, for about half a minute. `RESULTS.md` names the blocks and the sompi that arrived. The miners were stopped. `peg.sil` was not spent.
+
+**Reasoning.** Two coinbase addresses are still one operator and one asset. Many people locking their own KAS are the shape this lab can express, and each lock is its own UTXO. A coinbase that also paid a second asset would be a different consensus rule. The arithmetic already says that rule pays the miner less KAS. The node confirmed the half that does not need a patch: the block that was found paid sompi.

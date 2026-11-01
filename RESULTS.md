@@ -60,3 +60,17 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 ## Peg contract, 1 Nov 2026
 
 **Fact.** `contracts/peg.sil` compiled with silverc `compiler_version` `0.1.0`. `node --test model/issues.test.mjs` passed 9 tests. No resolver was contacted. No faucet was asked. No transaction was built for the peg contract. There is no peg txid.
+
+## Desk sample, 1 Nov 2026
+
+**Fact.** The test this study can run on today's nodes is a holder redeem of `peg.sil`, by more than one locker, with the coinbase left alone. That spend was not run. It needs keys. A stock Kaspa wallet would still show only sompi after it.
+
+**Fact.** A public TN10 node was already running on this desk: kaspad 2.1.0, `--testnet --netsuffix=10`, RPC on localhost. From 2026-11-01T20:51:30Z two `kaspa-miner` processes, one thread each, user agent `0.2.6/door-sample`, mined against that node. One used the public Grok Build address `kaspatest:qp4jge54eztxewf8r53rtjdvxakmatsu6tjd0nn9sjhgvzxknsfvjvmwurqhd`. The other used the public Grok Bot address `kaspatest:qzffl5xy9np46gkttyuftqnv2w04pr8g3wsp7c3vv8se3txtelx6q7c0v0ldx`. The logs record 37 successful submits from Build and 45 from Bot. Each thread reported 2.13 to 2.14 MH/s. The last log line is 2026-11-01T20:51:58Z. A later process check found no `kaspa-miner`. The node was left running. Home ASICs were not used. No private key was loaded. No new wallet was created.
+
+**Fact.** `https://api-tn10.kaspa.org` has both blocks. Build block `031d9b0b6918d2f29e2cf706699ab2318c4355dd804325139202000c6ac31890` (blue score 600681169) is an empty-input coinbase. `extra.minerAddress` is the Build address and `minerInfo` is `2.1.0/0.2.6/door-sample`. Every output is a pubkey script. Bot block `6015a8cc457346522b1504c52d28cc8bd91299fb185fec1aa101df06f378284e` (blue score 600681153) is the same shape, with the Bot address in the payload. One of its outputs pays the Build address 291352351 sompi, which is a later block settling an earlier block's script. No output is a covenant.
+
+**Fact.** Compared with a read of the same API earlier that evening, before these miners started, the Build address was higher by 10813139657 sompi and the Bot address by 13123698665 sompi. Those increases sit near 37 and 45 times the 291352351 sompi subsidy printed on the plain coinbase outputs, with a remainder on the scale of fees. The third public address did not change. The wallet still has one asset.
+
+**Fact.** After the sample, `/info/hashrate` was about `1.343e-5`. Read as terahash per second, that is about 13.4 MH/s. `/info/blockdag` named `kaspa-testnet-10` and a difficulty near 671481. Two threads at about 4.3 MH/s are on the order of thirty percent of that hashrate reading for the half minute they ran. They were stopped there. The rest of the CPU was not started.
+
+**Reasoning.** A larger share of public TN10 would still be sompi, because this kaspad builds the coinbase the network already expects. A different coinbase needs different node software, and nodes that keep the old rule would reject it. That split was not started. There is still no peg txid.
