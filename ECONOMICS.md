@@ -124,3 +124,15 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 **Reasoning.** The buffer in the 1.5 ratio is the 733333334 sompi that an immediate redeem does not return. It is the cost of surviving a drop in the quote, up to the gap `survivesGap` already checks. It is not income. Calling it a second reward double-counts a sompi that the holder cannot take.
 
 **Reasoning.** A treasury key, one key or twenty thousand, that must sign before the sompi move, is the Tether desk written as a script. The economics of Tether that this lab can use without that desk are only the two rules above: mint against new collateral, and redeem the collateral asset at the published terms. The attestations, the bank, and the blacklist are the desk. They stay in `DOORS.md` as the door-only issuer, which is allowed to exist and is labeled as a company.
+
+## A smaller slice, 2 Nov 2026
+
+**Fact.** Five percent of 4400000000 sompi is 220000000 locked and 4180000000 free, with face 146666666 at price 1 and ratio 1.5. The second devnet paid that output 29 times. `redeemMined` returns 146666666 of the lock and leaves 73333334. The finder who also keeps the free output holds 4326666666 sompi. The half-split finder, in the same function, holds 3666666666. Both are below 4400000000.
+
+**Fact.** At price 2, `forcedMinerValue` is 8800000000 with no slice, 8653333334 at five percent, and 7333333334 at half. The haircut scales with the slice. It does not change who receives the face. `faceShare` of 4 equal blocks in 6 is 4/6 at either slice.
+
+**Fact.** `survivesGap(3, 2, 15000)` is true. `survivesGap(3, 1, 15000)` is false. `survivesGap(2, 1, 20000)` is true and `survivesGap(2, 1, 15000)` is false. The same five percent slice at ratio 20000 has face 110000000. An immediate redeem then holds 4290000000 sompi, because more of the lock is surplus. The crash tolerance got wider. The miner's immediate KAS got smaller. The locked sompi did not. The slice sets the lock. The ratio sets the face.
+
+**Fact.** A fee of 200000 sompi at the half constants adds 200000 to the free output and leaves the face at 1466666666. The half chain paid that fee in the next block: immature KAS rose by 22.002 and the face rose by one face. A subsidy of 29 at five percent diverts 1 sompi with face 0. A subsidy of 30 has face 1.
+
+**Reasoning.** Taking a little of the block reward does not make a different economy from taking half. It changes the amount. The miner is still the first holder of the face, in proportion to blocks found. The buyer who wants the redeem still depends on a spend rule this lock does not have, and on a quote this constant does not check. The clean result is the fee. Moving KAS did not feed the face. The tail result is the warning. A face defined as a fraction of the subsidy goes to zero while KAS is still being paid, and the sompi it diverted at that point are not paid back. A voluntary lock does not have that tail, because it does not divert the subsidy. Its size is whatever someone locks, and it stops when they stop.

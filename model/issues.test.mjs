@@ -140,3 +140,64 @@ test("a pot of 20000 keys does not move on 19999 signatures", () => {
   assert.equal(potMoves(20_000, 20_000), true);
   assert.equal(potMoves(1, 1), true);
 });
+
+const MONTH0 = 4_400_000_000;
+
+test("five percent locks less KAS than half and still pays the miner less than the full subsidy", () => {
+  const little = splitReward(MONTH0, 0, 500, 1, 15_000);
+  assert.equal(little.diverted, 220_000_000);
+  assert.equal(little.free, 4_180_000_000);
+  assert.equal(little.face, 146_666_666);
+  const redeemed = redeemMined(MONTH0, 0, 500, 1, 15_000);
+  assert.equal(redeemed.kasBack, 146_666_666);
+  assert.equal(redeemed.surplus, 73_333_334);
+  assert.equal(redeemed.minerKas, 4_326_666_666);
+  assert.ok(redeemed.minerKas < MONTH0);
+  assert.ok(redeemed.minerKas > redeemMined(MONTH0, 0, 5_000, 1, 15_000).minerKas);
+});
+
+test("a smaller slice does not survive a deeper crash and does not cap a large miner", () => {
+  assert.equal(survivesGap(3, 2, 15_000), true);
+  assert.equal(survivesGap(3, 1, 15_000), false);
+  assert.equal(survivesGap(2, 1, 20_000), true);
+  assert.equal(survivesGap(2, 1, 15_000), false);
+  const wider = redeemMined(MONTH0, 0, 500, 1, 20_000);
+  assert.equal(wider.face, 110_000_000);
+  assert.equal(wider.diverted, 220_000_000);
+  assert.equal(wider.surplus, 110_000_000);
+  assert.equal(wider.minerKas, 4_290_000_000);
+  const half = faceShare(4, 6, MONTH0, 5_000, 1, 15_000);
+  const little = faceShare(4, 6, MONTH0, 500, 1, 15_000);
+  assert.equal(half.face * little.all, little.face * half.all);
+  assert.ok(little.all < half.all);
+});
+
+test("the value haircut scales with the slice, and a voluntary lock takes none of the subsidy", () => {
+  assert.equal(forcedMinerValue(MONTH0, 0, 2, 0, 15_000), 8_800_000_000);
+  assert.equal(forcedMinerValue(MONTH0, 0, 2, 500, 15_000), 8_653_333_334);
+  assert.equal(forcedMinerValue(MONTH0, 0, 2, 5_000, 15_000), 7_333_333_334);
+  assert.equal(splitReward(MONTH0, 0, 0, 1, 15_000).free, MONTH0);
+  assert.equal(supplyOf("coinbase", MONTH0, 2_200_000_000, 0, 1, 15_000), 0);
+  assert.equal(supplyOf("lock", MONTH0, 2_200_000_000, 0, 1, 15_000), 2_200_000_000);
+});
+
+test("a fee stays in the free output and does not change the face", () => {
+  const plain = splitReward(MONTH0, 0, 5_000, 1, 15_000);
+  const paid = splitReward(MONTH0, 200_000, 5_000, 1, 15_000);
+  assert.equal(paid.free, plain.free + 200_000);
+  assert.equal(paid.diverted, plain.diverted);
+  assert.equal(paid.face, plain.face);
+  assert.equal(paid.face, 1_466_666_666);
+});
+
+test("the face can hit zero while the subsidy still pays, and the diverted sompi stays locked", () => {
+  const tail = splitReward(29, 0, 500, 1, 15_000);
+  assert.equal(tail.face, 0);
+  assert.equal(tail.diverted, 1);
+  assert.equal(tail.free, 28);
+  assert.equal(redeemMined(29, 0, 500, 1, 15_000).kasBack, 0);
+  assert.equal(splitReward(30, 0, 500, 1, 15_000).face, 1);
+  assert.equal(splitReward(2, 0, 5_000, 1, 15_000).face, 0);
+  assert.equal(splitReward(3, 0, 5_000, 1, 15_000).face, 1);
+  assert.equal(splitReward(0, 0, 500, 1, 15_000).face, 0);
+});

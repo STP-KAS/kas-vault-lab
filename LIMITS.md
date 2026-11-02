@@ -57,3 +57,5 @@ The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.s
 **Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. No peg transaction was submitted. `RESULTS.md` records that.
 
 **Fact.** On the private devnet, after virtual DAA 1197, a mature free output spent and the paired lock did not. Waiting out coinbase maturity did not turn the stored face into a payment or a price.
+
+**Fact.** On 2 Nov 2026 the same chain rejected an immature coinbase spend, and the next block paid a 200000 sompi fee as KAS rather than as face. A second devnet at five percent paid 29 locks of 220000000 sompi and face 146666666. The model still marks a drop from 3 to 1 as insolvent at ratio 1.5, at either slice. A face of zero at a non-zero subsidy is a property of the integer, checked in the model, and it was not paid on these chains because they are at the month-0 subsidy. None of these runs is a market.

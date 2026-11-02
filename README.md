@@ -22,6 +22,8 @@ Kaspa already orders transactions, fast, under proof of work. A unit people can 
 | 1 Nov 2026 | Private devnet, localhost only, three addresses, one thread each | 25 blocks. Half the subsidy locked under an `STP1` script. All of it immature. The fork was not pushed. |
 | 1 Nov 2026 | The same notes, no new blocks | Schedule, holdings, and a shared pot. The model only. |
 | 1 Nov 2026 | The same private devnet, six CPU threads, then one confirming block | Block count and virtual DAA went from 25 to 1196, then to 1197. Mature KAS was spent. The node rejected the lock. |
+| 2 Nov 2026 | The same private devnet, localhost | The block field is virtual DAA, not a census. An immature spend was rejected. One more block paid a 200000 sompi fee entirely as KAS. |
+| 2 Nov 2026 | A second private devnet, other ports, other data directory | Five percent of the subsidy, 30 blocks. Free 41.8 KAS, lock 2.2 KAS, face 146666666. The source constant was put back to half. |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it. They hash for KAS. They do not lock, mint, or redeem.
 
@@ -31,7 +33,7 @@ These are different promises. None of them has been chosen as a product.
 
 - A receipt returns the same sompi. The holder keeps KAS volatility.
 - A person locks KAS they already hold. Each lock is its own UTXO. The miner is paid the full KAS reward. Redeem needs a quote. That quote is unsolved. `peg.sil` is this shape, and it has not been broadcast.
-- A coinbase can lock part of the subsidy and store a face. The private devnet ran this at half, so both outputs were large enough to see. Half is a lab size. After maturity the free KAS spent like ordinary KAS, and the node rejected the lock. The face is not a coin a wallet can send. This is not a public rule.
+- A coinbase can lock part of the subsidy and store a face. The first private devnet ran this at half, so both outputs were large enough to see. Half is a lab size. After maturity the free KAS spent like ordinary KAS, and the node rejected the lock. A second private devnet ran the same rule at five percent: free 41.8 KAS, lock 2.2 KAS, face 146666666. Five percent is still a haircut. It does not survive a deeper price drop than the half, because the crash line is the collateral ratio. The face is not a coin a wallet can send. This is not a public rule.
 - A shared pot of many keys can refuse one signature. Every holder then waits. That is a freeze. It is not built.
 - A company can mint against reserves and redeem the reserve asset, and can keep a freeze at its own door. That door is not the proof of work. It is not built here.
 - A rollup puts a sequencer back in front of the payments. Refused as an ordering design.
@@ -47,12 +49,14 @@ A few sentences in this work were wrong, or too final.
 - Miners declining to dump a note because dumping would hurt them is a wish. It is not a rule. The chain has no person to cap. A pool is one script.
 - An earlier note said another sample of the same coinbase would only repeat the haircut. That stopped short. Maturity and a spend had not been tried. They have been tried. The free half spends. The locked half does not.
 - The balance reader dropped one face after the free output of that same coinbase was spent. The reader only counts a coinbase while an address output of it remains. The second rejection from the node is the evidence that the lock was still there.
+- The gap between 1200 success reports and 1171 new blocks was called unexplained. That was incomplete. The field printed as `blocks` is `estimate_block_count`, which is virtual DAA minus the retention root. It does not include non-DAA blocks. The 1 Nov log accepted 1226 submits. The selected chain at virtual DAA 1197 is 1197 of those, plus genesis in the block walk. The other 29 did not become an extra face. The accepted locks are one per paid block, each exactly half of one subsidy.
+- Five percent was then run, because "a smaller diversion has not been run" was true and is no longer true. The smaller slice still pays the miner less than the full subsidy. `survivesGap` does not take the slice as an argument. A higher collateral ratio survives a deeper drop, and an immediate redeem then returns less KAS. A smaller slice does not cap a large miner's share of the face.
 
 ## What is still open
 
-The quote. A stale mint window. Finality. Two covenant lineages that are not one currency. `peg.sil` does not liquidate, and it has no transaction id. The devnet lock still cannot pay. A smaller diversion than half has not been run. Kaspa's own subsidy already ends, after 426 month entries, and the v2.1.0 test expects 0 after 36 yearly steps. This study does not lengthen that table. A never-ending mined face would be a second monetary policy.
+The quote. A stale mint window. Finality. Two covenant lineages that are not one currency. `peg.sil` does not liquidate, and it has no transaction id. It compiled again on 2 Nov 2026 with silverc 0.1.0. `cli-debugger` is still not on this machine, so that contract has no debugger count. The devnet lock still cannot pay. Five percent of the subsidy was run. It is the same door as the half. At the tail of the integer, a subsidy of 29 sompi with a five percent slice locks 1 sompi and mints a face of 0. Kaspa's own subsidy already ends, after 426 month entries, and the v2.1.0 test expects 0 after 36 yearly steps. This study does not lengthen that table. A never-ending mined face would be a second monetary policy.
 
-The path that stays inside the constraints is the voluntary lock, the full KAS reward, and no freeze. The coinbase split stays on the list because the bytes were run, the free half was spent, and the lock was rejected. Both stay open as studies. Neither is a claim.
+The path that stays inside the constraints is the voluntary lock, the full KAS reward, and no freeze. The coinbase split stays on the list because the bytes were run at two sizes, a mature free output was spent, a fee stayed in that free output, and the lock was rejected. Both stay open as studies. Neither is a claim.
 
 ## Read in this order
 
