@@ -2,6 +2,7 @@
 // Talks only to ws://127.0.0.1:17610 and mines only through grpc://127.0.0.1:16610.
 // Does not call a faucet, a resolver, or a public node.
 // A confirmed redeem is a covenant UTXO on this devnet. The quote is a lab key.
+// --late signs one mint, waits until that window's expiry, then submits the same bytes.
 
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
@@ -42,6 +43,14 @@ const PAY = 100_000_000n;
 const SURPLUS = 200_000_000n;
 const WRONG_PAY = 50_000_000n;
 const WRONG_LEFT = 250_000_000n;
+const LATE_CENTS = 25;
+const LATE_PRICE = 100_000_000;
+const LATE_VALUE = 100_000_000n;
+const LATE_PAY = 25_000_000n;
+const LATE_LEFT = 75_000_000n;
+const LATE_NEED = 50_000_000n;
+const LATE_FEE = 8_000_000n;
+const LATE_BUDGET = 29;
 const ZERO = "00".repeat(32);
 const LOCK_TIME_THRESHOLD = 500_000_000_000;
 
@@ -62,6 +71,9 @@ const PHASES = [
   "refreshedA",
   "mintedA2",
   "redeemedA2",
+  "lateRejected",
+  "lateMinted",
+  "lateRedeemed",
 ];
 
 const secrets = [];
@@ -128,6 +140,10 @@ function assertMath() {
   if (atRatio(MINT_CENTS, MINT_PRICE, RATIO) !== 200_000_000n) throw new Error("mint need");
   if (atRatio(TOO_MUCH, MINT_PRICE, RATIO) <= COLLATERAL) throw new Error("over mint should exceed collateral");
   if (WRONG_PAY + WRONG_LEFT !== COLLATERAL) throw new Error("wrong split");
+  if (fairSompi(LATE_CENTS, LATE_PRICE) !== LATE_PAY) throw new Error("late pay");
+  if (atRatio(LATE_CENTS, LATE_PRICE, RATIO) !== LATE_NEED) throw new Error("late ratio");
+  if (LATE_NEED > LATE_VALUE || LATE_LEFT !== LATE_VALUE - LATE_PAY) throw new Error("late collateral");
+  if (LATE_PAY < 20_000_000n || LATE_LEFT < 20_000_000n) throw new Error("late dust");
 }
 
 function budgetForUsed(used) {
@@ -149,6 +165,17 @@ function p2pkScript(value) {
   const hex = hexOf(value);
   if (hex.length === 132 && hex.startsWith("41")) return hex;
   return `41${rawSig(hex)}`;
+}
+
+function holdWindow(nowMs) {
+  const notBefore = nowMs - 5_000;
+  const expiry = nowMs + 40_000;
+  const lockTime = nowMs + 10_000;
+  if (notBefore < LOCK_TIME_THRESHOLD) throw new Error("lock time would be read as a DAA score");
+  const span = expiry - notBefore;
+  if (span <= 0 || span > 3_600_000) throw new Error("held window span");
+  if (lockTime < notBefore || lockTime > expiry) throw new Error("lock time outside the held window");
+  return { lockTime, notBefore, expiry };
 }
 
 function windowFor(nowMs, stale) {
@@ -345,13 +372,37 @@ async function connectRpc(kaspa) {
 
 async function dagOf(rpc) {
   const dag = await rpc.getBlockDagInfo();
+  const medianRaw = dag.pastMedianTime ?? dag.pastMedianTimestamp ?? null;
   return {
     virtualDaa: BigInt(dag.virtualDaaScore),
     blockCount: BigInt(dag.blockCount),
     headerCount: BigInt(dag.headerCount),
     sink: hexOf(dag.sink),
     tips: (dag.tipHashes || []).length,
+    median: medianRaw == null ? "" : BigInt(medianRaw).toString(),
+    dagKeys: Object.keys(dag).sort().join(","),
   };
+}
+
+async function blockStamp(kaspa, rpc, hash) {
+  const ids = [hash];
+  try {
+    ids.push(new kaspa.Hash(hash));
+  } catch {
+    // A string hash is enough when the client accepts it.
+  }
+  let last = "";
+  for (const id of ids) {
+    try {
+      const found = await rpc.getBlock({ hash: id, includeTransactions: false });
+      const header = (found && found.block && found.block.header) || (found && found.header) || null;
+      if (header && header.timestamp != null) return BigInt(header.timestamp).toString();
+      last = "no timestamp";
+    } catch (error) {
+      last = hide(error && error.message ? error.message : error).slice(0, 180);
+    }
+  }
+  return last;
 }
 
 async function utxosOf(rpc, address) {
@@ -495,6 +546,62 @@ async function submitOnce(kaspa, rpc, spec) {
   const failure = new Error(lastError || `${spec.label} was not accepted`);
   failure.rejected = true;
   throw failure;
+}
+
+function buildSigned(kaspa, spec, fee, budget) {
+  const fixed = spec.fixed(kaspa);
+  const inputSum = spec.covenantRows.reduce((sum, row) => sum + BigInt(row.amount), 0n) + BigInt(spec.feeRow.amount);
+  const fixedSum = fixed.reduce((sum, item) => sum + BigInt(item.value), 0n);
+  const change = inputSum - fixedSum - fee;
+  if (change < 1000n) throw new Error(`${spec.label} change would be ${change}`);
+  const outputs = [...fixed, { value: change, script: spec.changeScript, covenant: null }].map((item) =>
+    outputOf(kaspa, item.value, item.script, item.covenant),
+  );
+  const inputs = [...spec.covenantRows.map((row) => inputOf(row, budget)), inputOf(spec.feeRow, 0)];
+  const tx = new kaspa.Transaction({
+    version: 1,
+    inputs,
+    outputs,
+    lockTime: BigInt(spec.lockTime || 0),
+    subnetworkId: "00".repeat(20),
+    gas: 0n,
+    payload: "",
+  });
+  tx.version = 1;
+  applyBudget(tx, spec, budget);
+  for (const sig of spec.sigs) {
+    const args = sig.args.map((arg) => (arg === "OWNER" ? blankSig() : arg));
+    tx.inputs[sig.index].signatureScript = entryScript(kaspa, sig.built, sig.entry, args);
+    tx.inputs[sig.index].computeBudget = budget;
+  }
+  let required = 0n;
+  try {
+    const quote = kaspa.calculateTransactionFee(NETWORK, tx);
+    if (quote != null) required = BigInt(quote);
+  } catch {
+    required = FEE_FLOOR;
+  }
+  if (fee < required) return { ready: false, required, fee, change };
+  for (const sig of spec.sigs) {
+    const signed = Buffer.from(rawSig(kaspa.createInputSignature(tx, sig.index, sig.key)), "hex");
+    const args = sig.args.map((arg) => (arg === "OWNER" ? signed : arg));
+    tx.inputs[sig.index].signatureScript = entryScript(kaspa, sig.built, sig.entry, args);
+    tx.inputs[sig.index].computeBudget = budget;
+  }
+  const feeIndex = spec.covenantRows.length;
+  tx.inputs[feeIndex].signatureScript = p2pkScript(kaspa.createInputSignature(tx, feeIndex, spec.feeKey));
+  applyBudget(tx, spec, budget);
+  tx.finalize();
+  const bound = tx.outputs[0] && tx.outputs[0].covenant;
+  return {
+    ready: true,
+    tx,
+    required,
+    fee,
+    change,
+    id: hexOf(tx.id),
+    covenantId: bound ? hexOf(bound.covenantId.toString()) : "",
+  };
 }
 
 function p2sh(kaspa, built) {
@@ -683,6 +790,241 @@ async function main() {
       }
     }
 
+    if (process.argv.includes("--late")) {
+      if (!phaseAtLeast(state, "redeemedA2")) throw new Error("the late mint waits until the recorded redeem");
+      const storedQuote = 200_000_000;
+      const extension = state.extensionA;
+      const sitting = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: storedQuote });
+      const mintedState = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: LATE_CENTS, quote: LATE_PRICE });
+      const noteState = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: LATE_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: LATE_PRICE,
+      });
+      const redeemedState = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: LATE_PRICE });
+
+      if (state.phase === "lateRejected") {
+        say(`RESULT late ${JSON.stringify({ observed: "rejected", ...state.lateRejected })}`);
+        return;
+      }
+
+      if (phaseAtLeast(state, "lateRedeemed")) {
+        const vault = await waitRow(rpc, kaspa, redeemedState, LATE_LEFT);
+        const pays = await waitPay(rpc, wallets.two.address, state.lateRedeemed.txid, [LATE_PAY, CARRIER]);
+        say(`RESULT late ${JSON.stringify({
+          observed: "read-back",
+          mint: state.lateMinted.txid,
+          redeem: state.lateRedeemed.txid,
+          lockTime: state.lateMinted.lockTime,
+          notBefore: state.lateMinted.notBefore,
+          expiry: state.lateMinted.expiry,
+          signedAt: state.lateMinted.signedAt,
+          submitAt: state.lateMinted.submitAt,
+          blockTime: state.lateMinted.blockTime,
+          median: state.lateMinted.median,
+          surplus: vault.row.amount.toString(),
+          pay: LATE_PAY.toString(),
+          pays,
+          covenant: vault.covenantId,
+        })}`);
+        return;
+      }
+
+      let mintedRow = null;
+      if (!phaseAtLeast(state, "lateMinted")) {
+        const have = await waitRow(rpc, kaspa, sitting, LATE_VALUE);
+        if (!state.redeemedA2 || have.covenantId !== state.redeemedA2.covenantId) {
+          throw new Error(`late vault covenant ${have.covenantId} is not the recorded redeem`);
+        }
+        say(`late-from covenant=${have.covenantId} value=${have.row.amount} quote=${storedQuote}`);
+        const mintedBuilt = compile(mintedState);
+        const noteBuilt = compile(noteState);
+        const window = holdWindow(Date.now());
+        const signedPrice = signPrice(LATE_PRICE, window.notBefore, window.expiry, oracle.priv);
+        const args = [LATE_CENTS, Buffer.from(wallets.two.pub, "hex"), LATE_PRICE, window.notBefore, window.expiry, signedPrice.sig, "OWNER"];
+        const virtualDaa = (await dagOf(rpc)).virtualDaa;
+        const feeRow = await pickCoin(rpc, wallets.one, virtualDaa, CARRIER + LATE_FEE, new Set());
+        say(`late-mint fee coin ${idOf(feeRow)} amount=${feeRow.amount} daa=${daaOf(feeRow)} coinbase=${coinbaseOf(feeRow)}`);
+        const spec = {
+          label: "late-mint",
+          feeRow,
+          feeKey: wallets.one.key,
+          changeScript: wallets.one.spk,
+          lockTime: window.lockTime,
+          covenantRows: [have.row],
+          sigs: [{ index: 0, built: have.built, entry: "mint", key: wallets.one.key, args }],
+          fixed: (sdk) => [
+            { value: LATE_VALUE, script: sdk.payToScriptHashScript(mintedBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+            { value: CARRIER, script: sdk.payToScriptHashScript(noteBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+          ],
+        };
+        let fee = LATE_FEE;
+        let frozen = null;
+        for (let attempt = 1; attempt <= 6; attempt += 1) {
+          frozen = buildSigned(kaspa, spec, fee, LATE_BUDGET);
+          if (frozen.ready) break;
+          say(`late-mint fee ${fee} below quote ${frozen.required}`);
+          fee = frozen.required + 1000n;
+        }
+        if (!frozen || !frozen.ready) throw new Error("late mint fee did not settle before the wait");
+        const signedAt = Date.now();
+        if (signedAt > window.expiry) throw new Error("signing finished after the held window");
+        say(`late-mint signed id=${frozen.id} lockTime=${window.lockTime} notBefore=${window.notBefore} expiry=${window.expiry} fee=${frozen.fee} change=${frozen.change}`);
+        journal({
+          label: "late-mint-signed",
+          txid: frozen.id,
+          lockTime: window.lockTime,
+          notBefore: window.notBefore,
+          expiry: window.expiry,
+          signedAt,
+          fee: frozen.fee.toString(),
+          change: frozen.change.toString(),
+          covenantId: frozen.covenantId,
+        });
+        say(`late-mint holding until wall clock passes ${window.expiry}`);
+        while (Date.now() <= window.expiry + 2_000) await sleep(1000);
+        const submitAt = Date.now();
+        const before = await dagOf(rpc);
+        say(`late-mint submit wall=${submitAt} expiry=${window.expiry} median=${before.median} dagKeys=${before.dagKeys} virtual_daa=${before.virtualDaa} sink=${before.sink}`);
+        if (submitAt <= window.expiry) throw new Error("submit is still inside the held window");
+        try {
+          const result = await rpc.submitTransaction({ transaction: frozen.tx, allowOrphan: false });
+          const id = hexOf(result.transactionId || frozen.tx.id);
+          if (id !== frozen.id) say(`late-mint submit id ${id} differs from signed id ${frozen.id}`);
+          record({
+            label: "late-mint",
+            expected: "measure",
+            observed: "accepted",
+            txid: id,
+            fee: frozen.fee.toString(),
+            budget: LATE_BUDGET,
+            change: frozen.change.toString(),
+            covenantId: frozen.covenantId,
+            lockTime: window.lockTime,
+            notBefore: window.notBefore,
+            expiry: window.expiry,
+            signedAt,
+            submitAt,
+            median: before.median,
+          });
+          state.phase = "lateMinted";
+          state.lateMinted = {
+            txid: id,
+            fee: frozen.fee.toString(),
+            budget: LATE_BUDGET,
+            change: frozen.change.toString(),
+            covenantId: frozen.covenantId,
+            lockTime: window.lockTime,
+            notBefore: window.notBefore,
+            expiry: window.expiry,
+            signedAt,
+            submitAt,
+            median: before.median,
+          };
+          saveJson(STATE_FILE, state);
+          mineOne(wallets.three.address);
+          const after = await dagOf(rpc);
+          const stamp = await blockStamp(kaspa, rpc, after.sink);
+          state.lateMinted.blockTime = stamp;
+          state.lateMinted.sink = after.sink;
+          state.lateMinted.virtualDaa = after.virtualDaa.toString();
+          saveJson(STATE_FILE, state);
+          const blockAfter = /^\d+$/.test(stamp) && BigInt(stamp) > BigInt(window.expiry);
+          say(`late-mint mined sink=${after.sink} blockTime=${stamp} blockAfterExpiry=${blockAfter} virtual_daa=${after.virtualDaa}`);
+          journal({ label: "late-mint-mined", txid: id, sink: after.sink, blockTime: stamp, blockAfterExpiry: blockAfter, virtualDaa: after.virtualDaa.toString(), median: after.median });
+        } catch (error) {
+          const message = hide(error && error.message ? error.message : error);
+          if (/insufficient fee|fee rate|feerate|\bmass\b|orphan|not synced|compute budget|signature script length|not final|ECONN|timed out|socket hang/i.test(message)) {
+            throw error;
+          }
+          record({
+            label: "late-mint",
+            expected: "measure",
+            observed: "rejected",
+            error: message.slice(0, 800),
+            lockTime: window.lockTime,
+            notBefore: window.notBefore,
+            expiry: window.expiry,
+            signedAt,
+            submitAt,
+            median: before.median,
+          });
+          state.phase = "lateRejected";
+          state.lateRejected = {
+            error: message.slice(0, 800),
+            lockTime: window.lockTime,
+            notBefore: window.notBefore,
+            expiry: window.expiry,
+            signedAt,
+            submitAt,
+            median: before.median,
+          };
+          saveJson(STATE_FILE, state);
+          say(`RESULT late ${JSON.stringify({ observed: "rejected", ...state.lateRejected })}`);
+          return;
+        }
+      } else {
+        say(`late-mint already ${state.lateMinted.txid}`);
+      }
+
+      const vaultFound = await findRow(rpc, kaspa, mintedState, LATE_VALUE);
+      const noteFound = await findRow(rpc, kaspa, noteState, CARRIER);
+      if (!vaultFound || !noteFound) mineOne(wallets.three.address);
+      mintedRow = {
+        vault: vaultFound && vaultFound.covenantId ? vaultFound : await waitRow(rpc, kaspa, mintedState, LATE_VALUE),
+        note: noteFound && noteFound.covenantId ? noteFound : await waitRow(rpc, kaspa, noteState, CARRIER),
+      };
+      if (mintedRow.vault.covenantId !== state.redeemedA2.covenantId) {
+        throw new Error(`late mint covenant drifted to ${mintedRow.vault.covenantId}`);
+      }
+
+      const redeemedBuilt = compile(redeemedState);
+      const redeemed = await accept("late-redeem", "lateRedeemed", wallets.two, {
+        feeNeed: FEE_FLOOR,
+        lockTime: 0,
+        covenantRows: [mintedRow.vault.row, mintedRow.note.row],
+        sigs: [
+          { index: 0, built: mintedRow.vault.built, entry: "vaultRedeem", key: wallets.two.key, args: [] },
+          { index: 1, built: mintedRow.note.built, entry: "noteRedeem", key: wallets.two.key, args: ["OWNER"] },
+        ],
+        fixed: (sdk) => [
+          { value: LATE_LEFT, script: sdk.payToScriptHashScript(redeemedBuilt.redeem), covenant: binding(sdk, 0, mintedRow.vault.covenantId) },
+          { value: LATE_PAY, script: sdk.payToAddressScript(wallets.two.address) },
+          { value: CARRIER, script: sdk.payToAddressScript(wallets.two.address) },
+        ],
+      }, async () => {
+        const vault = await waitRow(rpc, kaspa, redeemedState, LATE_LEFT);
+        const txid = state.lateRedeemed.txid;
+        const pays = await waitPay(rpc, wallets.two.address, txid, [LATE_PAY, CARRIER]);
+        return { vault, pays, txid };
+      });
+      const stamp = state.lateMinted.blockTime || "";
+      const blockAfter = /^\d+$/.test(String(stamp)) && BigInt(stamp) > BigInt(state.lateMinted.expiry);
+      say(`RESULT late ${JSON.stringify({
+        observed: "accepted",
+        mint: state.lateMinted.txid,
+        redeem: redeemed.txid,
+        cents: LATE_CENTS,
+        price: LATE_PRICE,
+        lockTime: state.lateMinted.lockTime,
+        notBefore: state.lateMinted.notBefore,
+        expiry: state.lateMinted.expiry,
+        signedAt: state.lateMinted.signedAt,
+        submitAt: state.lateMinted.submitAt,
+        blockTime: stamp,
+        blockAfterExpiry: blockAfter,
+        median: state.lateMinted.median,
+        surplus: redeemed.vault.row.amount.toString(),
+        pay: LATE_PAY.toString(),
+        carrier: CARRIER.toString(),
+        covenant: redeemed.vault.covenantId,
+      })}`);
+      return;
+    }
+
     if (process.argv.includes("--quote")) {
       const nextPrice = 200_000_000;
       const cents = 50;
@@ -690,6 +1032,15 @@ async function main() {
       const left = SURPLUS - pay;
       if (pay !== 100_000_000n || left !== 100_000_000n) throw new Error("second quote pay");
       if (atRatio(cents, nextPrice, RATIO) !== SURPLUS) throw new Error("second quote ratio");
+      if (phaseAtLeast(state, "lateMinted")) {
+        say(`RESULT quote ${JSON.stringify({
+          refresh: state.refreshedA.txid,
+          mint: state.mintedA2.txid,
+          redeem: state.redeemedA2.txid,
+          note: "the 100000000 surplus was spent by a later mint",
+        })}`);
+        return;
+      }
       if (phaseAtLeast(state, "redeemedA2")) {
         const redeemed = shape(wallets.one.pub, state.extensionA, oracle.pub, { sealed: 1, debt: 0, quote: nextPrice });
         const vault = await waitRow(rpc, kaspa, redeemed, left);

@@ -109,6 +109,8 @@ The script requires `lockTime >= notBefore`, `lockTime <= expiry`, and `expiry -
 
 **Fact.** Consensus finality is median time `>` lock time, or DAA `>` lock time. A transaction can be mined after the signed window if its lock time was set inside the window. Setting the lock time back to an old expiry, once median time is already past that expiry, is still allowed by consensus. `LIMITS.md` records that residual. This contract does not close it.
 
+**Fact.** On 2 Nov 2026 the private devnet ran that shape. The mint was signed once, held past the expiry, and submitted unchanged. The node accepted it. The including block's timestamp was after the expiry, and the past median time was still about twenty hours behind. `RESULTS.md` has the ids. The time opcodes in this devnet binary are `OpCheckLockTimeVerify`, `OpCheckSequenceVerify`, `OpTxLockTime`, and `OpTxInputDaaScore`. The last of those is the DAA of the block that created the input. None of them is the timestamp of the block being built.
+
 **Fact.** TN10's virtual DAA on 26 Oct 2026 was about 6.07e8 on the resolver used by the driver, and the REST health blue score was about 5.96e8. Both are far below 500,000,000,000, so a DAA lock time of "now" is still a legal DAA value. The price window uses milliseconds anyway, because a wall-clock expiry is the check the oracle signs.
 
 ## What the debugger has shown
