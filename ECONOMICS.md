@@ -150,3 +150,9 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 **Fact.** Covenant A held 100000000 sompi at stored quote 200000000, and the debt was 0. A mint of 25 cents at price 100000000 was signed inside a 45 second window and included 2515 milliseconds after that window's expiry. The node accepted it. `atRatio` of that mint is 50000000, so the 1 KAS still covered the 2.0 line. The redeem paid `fairSompi(25, 100000000)`, which is 25000000 sompi, and left 75000000. The fee on the mint was 8000000 sompi. The fee on the redeem was 9557300 sompi. Both fees came from other outputs. The ids are in `RESULTS.md`.
 
 **Reasoning.** The clock of the block did not change the payout. The payout was the price in the signature, and debt 0 let that signature replace the stored quote. A shop that had been using the 200000000 quote was then redeeming against 100000000, in a block whose own timestamp was already outside the window the oracle had signed. The sompi moved because the script allows it. The miner was paid a fee and the block reward, in KAS, from outside the lock.
+
+## A held note was repriced, 2 Nov 2026
+
+**Fact.** Twenty cents were minted at price 100000000 against 75000000 sompi. `fairSompi` at that price is 20000000. The lab key stored 400000000 while the note was outstanding. `fairSompi` became 80000000, which is more than the vault. A redeem that offered 40000000 was rejected. The key then stored 200000000. The holder redeemed 40000000 and left 35000000. The fees were 4000000, 8871700, 4000000, and 3871600 sompi, each from a coin outside the lock.
+
+**Reasoning.** The holder of the note did not agree to the new price. The script does not ask them. The arithmetic they redeem is the quote at redeem time. A shop that took the note at 0.2 KAS per 0.20 was paid 0.4 KAS, and for a few seconds the vault could not pay at all. That is the key's power over a note already in someone else's hands. The miner still found the blocks and was paid in KAS.

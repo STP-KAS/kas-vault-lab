@@ -111,6 +111,8 @@ The script requires `lockTime >= notBefore`, `lockTime <= expiry`, and `expiry -
 
 **Fact.** On 2 Nov 2026 the private devnet ran that shape. The mint was signed once, held past the expiry, and submitted unchanged. The node accepted it. The including block's timestamp was after the expiry, and the past median time was still about twenty hours behind. `RESULTS.md` has the ids. The time opcodes in this devnet binary are `OpCheckLockTimeVerify`, `OpCheckSequenceVerify`, `OpTxLockTime`, and `OpTxInputDaaScore`. The last of those is the DAA of the block that created the input. None of them is the timestamp of the block being built.
 
+**Fact.** `refreshVault` and `refreshNote` call `priceMessage` and do not call `checkSig` on the holder or the vault owner. The same evening those two entries moved an outstanding 20-cent note from price 100000000 to 400000000 and then to 200000000. The foreign key failed. The short pay failed. The redeem at 200000000 paid 40000000 sompi. `RESULTS.md` has the ids.
+
 **Fact.** TN10's virtual DAA on 26 Oct 2026 was about 6.07e8 on the resolver used by the driver, and the REST health blue score was about 5.96e8. Both are far below 500,000,000,000, so a DAA lock time of "now" is still a legal DAA value. The price window uses milliseconds anyway, because a wall-clock expiry is the check the oracle signs.
 
 ## What the debugger has shown

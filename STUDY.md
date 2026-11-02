@@ -162,3 +162,9 @@ This section is a study. It does not issue a coin and it does not ask a public n
 **Fact.** The past median time on that node was 74706069 milliseconds behind the including block, which is 20 hours, 45 minutes, and 6 seconds. The transaction used the maximum sequence on every input, so the median was not what made it final. The script's time check is `OpTxLockTime`. The opcodes in this devnet's script that mention time do not return the timestamp of the block that is doing the including.
 
 **Reasoning.** An expired lock time fails. A fresh lock time, carried in a block that is already late, does not fail. The signer chooses the lock time. The miner chooses when the block exists. This script can see the first and cannot see the second. The price was the lab key again. Debt was zero, so the mint stored the new price over the old one. Proof of work ordered the late block. It did not decide that the window was still open. The `STP1` outputs are still unspendable. This is a study. We are not claiming a stablecoin.
+
+## The note someone already held, 2 Nov 2026
+
+**Fact.** The numbers are in `RESULTS.md`. Covenant A held 0.75 KAS and no debt. Address one minted 20 cents to address two at price 100000000. A different key was rejected on the refresh. The lab key then stored 400000000, and a redeem that offered less than the new fair sompi was rejected. The same key stored 200000000. Address two redeemed and received 0.4 KAS. The vault kept 0.35 KAS. Address two did not sign either refresh.
+
+**Reasoning.** Holding the note did not freeze the price. The redeem pays whatever quote is stored at the moment the holder redeems, and the key can change that quote while the note sits. It can also write a quote the vault cannot pay. The second key shows the power is that one key, not every key. The coinbase lock is still the other door, and it still does not pay. This is a study. We are not claiming a stablecoin.

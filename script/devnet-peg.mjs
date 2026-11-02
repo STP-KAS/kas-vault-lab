@@ -3,6 +3,7 @@
 // Does not call a faucet, a resolver, or a public node.
 // A confirmed redeem is a covenant UTXO on this devnet. The quote is a lab key.
 // --late signs one mint, waits until that window's expiry, then submits the same bytes.
+// --live mints a note and refreshes its price without the holder's signature.
 
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
@@ -51,6 +52,16 @@ const LATE_LEFT = 75_000_000n;
 const LATE_NEED = 50_000_000n;
 const LATE_FEE = 8_000_000n;
 const LATE_BUDGET = 29;
+const LIVE_CENTS = 20;
+const LIVE_PRICE = 100_000_000;
+const LIVE_VALUE = 75_000_000n;
+const LIVE_NEED = 40_000_000n;
+const HIGH_PRICE = 400_000_000;
+const HIGH_PAY = 80_000_000n;
+const DOWN_PRICE = 200_000_000;
+const DOWN_PAY = 40_000_000n;
+const DOWN_LEFT = 35_000_000n;
+const LIVE_FEE = 16_000_000n;
 const ZERO = "00".repeat(32);
 const LOCK_TIME_THRESHOLD = 500_000_000_000;
 
@@ -74,6 +85,12 @@ const PHASES = [
   "lateRejected",
   "lateMinted",
   "lateRedeemed",
+  "liveMinted",
+  "rejectedWrongKey",
+  "refreshedHigh",
+  "rejectedShortLive",
+  "refreshedDown",
+  "redeemedLive",
 ];
 
 const secrets = [];
@@ -144,6 +161,13 @@ function assertMath() {
   if (atRatio(LATE_CENTS, LATE_PRICE, RATIO) !== LATE_NEED) throw new Error("late ratio");
   if (LATE_NEED > LATE_VALUE || LATE_LEFT !== LATE_VALUE - LATE_PAY) throw new Error("late collateral");
   if (LATE_PAY < 20_000_000n || LATE_LEFT < 20_000_000n) throw new Error("late dust");
+  if (fairSompi(LIVE_CENTS, LIVE_PRICE) !== 20_000_000n) throw new Error("live mint pay");
+  if (atRatio(LIVE_CENTS, LIVE_PRICE, RATIO) !== LIVE_NEED) throw new Error("live mint ratio");
+  if (LIVE_NEED > LIVE_VALUE) throw new Error("live mint does not fit");
+  if (fairSompi(LIVE_CENTS, HIGH_PRICE) !== HIGH_PAY) throw new Error("high pay");
+  if (HIGH_PAY <= LIVE_VALUE) throw new Error("high quote should not fit");
+  if (fairSompi(LIVE_CENTS, DOWN_PRICE) !== DOWN_PAY) throw new Error("down pay");
+  if (LIVE_VALUE - DOWN_PAY !== DOWN_LEFT || DOWN_LEFT < 20_000_000n) throw new Error("down surplus");
 }
 
 function budgetForUsed(used) {
@@ -533,6 +557,15 @@ async function submitOnce(kaspa, rpc, spec) {
           continue;
         }
       }
+      const namedFee = lastError.match(/required amount of (\d+)/i);
+      if (namedFee) {
+        const next = BigInt(namedFee[1]) + 1000n;
+        if (next > fee) {
+          fee = next;
+          say(`${spec.label} retry node fee ${fee}`);
+          continue;
+        }
+      }
       if (/fee|mass/i.test(lastError) && attempt < 4) {
         fee *= 2n;
         say(`${spec.label} retry fee ${fee}`);
@@ -811,6 +844,11 @@ async function main() {
         return;
       }
 
+      if (phaseAtLeast(state, "liveMinted")) {
+        say(`RESULT late ${JSON.stringify({ observed: "spent-by-later-mint", redeem: state.lateRedeemed && state.lateRedeemed.txid })}`);
+        return;
+      }
+
       if (phaseAtLeast(state, "lateRedeemed")) {
         const vault = await waitRow(rpc, kaspa, redeemedState, LATE_LEFT);
         const pays = await waitPay(rpc, wallets.two.address, state.lateRedeemed.txid, [LATE_PAY, CARRIER]);
@@ -1021,6 +1059,217 @@ async function main() {
         pay: LATE_PAY.toString(),
         carrier: CARRIER.toString(),
         covenant: redeemed.vault.covenantId,
+      })}`);
+      return;
+    }
+
+    if (process.argv.includes("--live")) {
+      if (!phaseAtLeast(state, "lateRedeemed") || state.phase === "lateRejected") {
+        throw new Error("the live note waits until the late redeem");
+      }
+      const extension = state.extensionA;
+      const sitting = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: LIVE_PRICE });
+      const mintedVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: LIVE_CENTS, quote: LIVE_PRICE });
+      const mintedNote = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: LIVE_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: LIVE_PRICE,
+      });
+      const highVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: LIVE_CENTS, quote: HIGH_PRICE });
+      const highNote = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: LIVE_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: HIGH_PRICE,
+      });
+      const downVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: LIVE_CENTS, quote: DOWN_PRICE });
+      const downNote = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: LIVE_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: DOWN_PRICE,
+      });
+      const doneVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: DOWN_PRICE });
+      const doneBuilt = compile(doneVault);
+
+      function pairOf(vaultState, noteState, amount) {
+        return Promise.all([
+          waitRow(rpc, kaspa, vaultState, amount),
+          waitRow(rpc, kaspa, noteState, CARRIER),
+        ]).then(([vault, note]) => ({ vault, note }));
+      }
+
+      function refreshOf(from, toVaultState, toNoteState, price, priv) {
+        const window = windowFor(Date.now(), false);
+        const signed = signPrice(price, window.notBefore, window.expiry, priv);
+        const toVault = compile(toVaultState);
+        const toNote = compile(toNoteState);
+        return {
+          pub: signed.pub.toString("hex"),
+          spec: {
+            feeNeed: LIVE_FEE,
+            lockTime: window.lockTime,
+            covenantRows: [from.vault.row, from.note.row],
+            sigs: [
+              { index: 0, built: from.vault.built, entry: "refreshVault", key: wallets.one.key, args: [price, window.notBefore, window.expiry, signed.sig] },
+              { index: 1, built: from.note.built, entry: "refreshNote", key: wallets.one.key, args: [price, window.notBefore, window.expiry, signed.sig] },
+            ],
+            fixed: (sdk) => [
+              { value: LIVE_VALUE, script: sdk.payToScriptHashScript(toVault.redeem), covenant: binding(sdk, 0, from.vault.covenantId) },
+              { value: CARRIER, script: sdk.payToScriptHashScript(toNote.redeem), covenant: binding(sdk, 1, from.vault.covenantId) },
+            ],
+          },
+        };
+      }
+
+      if (phaseAtLeast(state, "redeemedLive")) {
+        const vault = await waitRow(rpc, kaspa, doneVault, DOWN_LEFT);
+        const pays = await waitPay(rpc, wallets.two.address, state.redeemedLive.txid, [DOWN_PAY, CARRIER]);
+        const end = await dagOf(rpc);
+        say(`RESULT live ${JSON.stringify({
+          observed: "read-back",
+          mint: state.liveMinted.txid,
+          wrongPub: state.rejectedWrongKey && state.rejectedWrongKey.pub,
+          high: state.refreshedHigh.txid,
+          down: state.refreshedDown.txid,
+          redeem: state.redeemedLive.txid,
+          surplus: vault.row.amount.toString(),
+          pay: DOWN_PAY.toString(),
+          pays,
+          covenant: vault.covenantId,
+          virtualDaa: end.virtualDaa.toString(),
+          sink: end.sink,
+        })}`);
+        return;
+      }
+
+      if (!phaseAtLeast(state, "refreshedHigh")) {
+        if (!phaseAtLeast(state, "liveMinted")) {
+          const have = await waitRow(rpc, kaspa, sitting, LIVE_VALUE);
+          if (!state.redeemedA2 || have.covenantId !== state.redeemedA2.covenantId) {
+            throw new Error(`live vault covenant ${have.covenantId} is not the recorded redeem`);
+          }
+          say(`live-from covenant=${have.covenantId} value=${have.row.amount} quote=${LIVE_PRICE}`);
+          const mintedBuilt = compile(mintedVault);
+          const noteBuilt = compile(mintedNote);
+          const window = windowFor(Date.now(), false);
+          const signed = signPrice(LIVE_PRICE, window.notBefore, window.expiry, oracle.priv);
+          const args = [LIVE_CENTS, Buffer.from(wallets.two.pub, "hex"), LIVE_PRICE, window.notBefore, window.expiry, signed.sig, "OWNER"];
+          await accept("live-mint", "liveMinted", wallets.one, {
+            feeNeed: CARRIER + LIVE_FEE,
+            lockTime: window.lockTime,
+            covenantRows: [have.row],
+            sigs: [{ index: 0, built: have.built, entry: "mint", key: wallets.one.key, args }],
+            fixed: (sdk) => [
+              { value: LIVE_VALUE, script: sdk.payToScriptHashScript(mintedBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+              { value: CARRIER, script: sdk.payToScriptHashScript(noteBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+            ],
+          }, () => pairOf(mintedVault, mintedNote, LIVE_VALUE));
+        }
+
+        const minted = await pairOf(mintedVault, mintedNote, LIVE_VALUE);
+        if (minted.vault.covenantId !== state.redeemedA2.covenantId) throw new Error("live mint covenant drifted");
+        say(`live-mint covenant=${minted.vault.covenantId} note=${minted.note.address}`);
+
+        if (!phaseAtLeast(state, "rejectedWrongKey")) {
+          let wrong = null;
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            const priv = randomBytes(32);
+            try {
+              const probe = signPrice(1, 1, 2, priv);
+              if (probe.pub.toString("hex") === oracle.pub) continue;
+              secrets.push(priv.toString("hex"));
+              wrong = priv;
+              break;
+            } catch {
+              // The scalar was outside the schnorr range.
+            }
+          }
+          if (!wrong) throw new Error("could not draw a second oracle key");
+          const bad = refreshOf(minted, highVault, highNote, HIGH_PRICE, wrong);
+          say(`live wrong-key pub=${bad.pub}`);
+          await reject("reject-wrong-key", "rejectedWrongKey", wallets.one, bad.spec);
+          state.rejectedWrongKey.pub = bad.pub;
+          saveJson(STATE_FILE, state);
+        }
+
+        const good = refreshOf(minted, highVault, highNote, HIGH_PRICE, oracle.priv);
+        if (good.pub !== oracle.pub) throw new Error("refresh signed a different oracle");
+        await accept("refresh-high", "refreshedHigh", wallets.one, good.spec, () => pairOf(highVault, highNote, LIVE_VALUE));
+        say(`refresh-high price=${HIGH_PRICE} holder-signed=false`);
+      }
+
+      if (!phaseAtLeast(state, "refreshedDown")) {
+        const high = await pairOf(highVault, highNote, LIVE_VALUE);
+        if (high.vault.covenantId !== state.redeemedA2.covenantId) throw new Error("refresh-high covenant drifted");
+        if (!phaseAtLeast(state, "rejectedShortLive")) {
+          await reject("reject-short-live", "rejectedShortLive", wallets.two, {
+            feeNeed: LIVE_FEE,
+            lockTime: 0,
+            covenantRows: [high.vault.row, high.note.row],
+            sigs: [
+              { index: 0, built: high.vault.built, entry: "vaultRedeem", key: wallets.two.key, args: [] },
+              { index: 1, built: high.note.built, entry: "noteRedeem", key: wallets.two.key, args: ["OWNER"] },
+            ],
+            fixed: (sdk) => [
+              { value: DOWN_LEFT, script: sdk.payToScriptHashScript(doneBuilt.redeem), covenant: binding(sdk, 0, high.vault.covenantId) },
+              { value: DOWN_PAY, script: sdk.payToAddressScript(wallets.two.address) },
+              { value: CARRIER, script: sdk.payToAddressScript(wallets.two.address) },
+            ],
+          });
+          say(`reject-short-live offered ${DOWN_PAY} against fair ${HIGH_PAY}`);
+        }
+        const downMove = refreshOf(high, downVault, downNote, DOWN_PRICE, oracle.priv);
+        await accept("refresh-down", "refreshedDown", wallets.one, downMove.spec, () => pairOf(downVault, downNote, LIVE_VALUE));
+        say(`refresh-down price=${DOWN_PRICE} holder-signed=false`);
+      }
+
+      const down = await pairOf(downVault, downNote, LIVE_VALUE);
+      const redeemed = await accept("redeem-live", "redeemedLive", wallets.two, {
+        feeNeed: LIVE_FEE,
+        lockTime: 0,
+        covenantRows: [down.vault.row, down.note.row],
+        sigs: [
+          { index: 0, built: down.vault.built, entry: "vaultRedeem", key: wallets.two.key, args: [] },
+          { index: 1, built: down.note.built, entry: "noteRedeem", key: wallets.two.key, args: ["OWNER"] },
+        ],
+        fixed: (sdk) => [
+          { value: DOWN_LEFT, script: sdk.payToScriptHashScript(doneBuilt.redeem), covenant: binding(sdk, 0, down.vault.covenantId) },
+          { value: DOWN_PAY, script: sdk.payToAddressScript(wallets.two.address) },
+          { value: CARRIER, script: sdk.payToAddressScript(wallets.two.address) },
+        ],
+      }, async () => {
+        const vault = await waitRow(rpc, kaspa, doneVault, DOWN_LEFT);
+        const txid = state.redeemedLive.txid;
+        const pays = await waitPay(rpc, wallets.two.address, txid, [DOWN_PAY, CARRIER]);
+        return { vault, pays, txid };
+      });
+      const end = await dagOf(rpc);
+      say(`RESULT live ${JSON.stringify({
+        observed: "accepted",
+        mint: state.liveMinted.txid,
+        wrongPub: state.rejectedWrongKey.pub,
+        high: state.refreshedHigh.txid,
+        down: state.refreshedDown.txid,
+        redeem: redeemed.txid,
+        cents: LIVE_CENTS,
+        mintPrice: LIVE_PRICE,
+        highPrice: HIGH_PRICE,
+        downPrice: DOWN_PRICE,
+        surplus: redeemed.vault.row.amount.toString(),
+        pay: DOWN_PAY.toString(),
+        carrier: CARRIER.toString(),
+        covenant: redeemed.vault.covenantId,
+        virtualDaa: end.virtualDaa.toString(),
+        sink: end.sink,
+        median: end.median,
       })}`);
       return;
     }
