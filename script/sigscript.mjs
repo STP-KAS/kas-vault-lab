@@ -2,7 +2,9 @@
 // The caller appends the redeem script as one data push.
 
 export function encodeEntry(kaspa, artifact, entryName, args) {
-  const contract = artifact.contracts.Vault;
+  const names = Object.keys(artifact.contracts || {});
+  if (names.length !== 1) throw new Error(`expected one contract, found ${names.join(",") || "none"}`);
+  const contract = artifact.contracts[names[0]];
   const entry = contract.entries[entryName];
   if (!entry) throw new Error(`missing entry ${entryName}`);
   if (entry.params.length !== args.length) {

@@ -54,8 +54,10 @@ The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.s
 
 **Reasoning.** A Kaspa UTXO is as hard to rewrite as the chain it sits in. That hardness is the history. A price in an outside unit is a number someone has to supply. Years of proof of work on Bitcoin did not write that number into the protocol. A mined face that follows hashrate gives the largest pools the largest new inventory. The model shows the share. It does not show a rule that can cap a person, because the chain has no person. This study does not claim a stablecoin.
 
-**Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. No peg transaction was submitted. `RESULTS.md` records that.
+**Fact.** The oracle key is still a key. Storing its last price does not check a market. Two covenant ids are still two notes. The 2 Nov redeem ids are in `RESULTS.md`. The key that signed them also replaced the stored price, and the payout followed.
 
 **Fact.** On the private devnet, after virtual DAA 1197, a mature free output spent and the paired lock did not. Waiting out coinbase maturity did not turn the stored face into a payment or a price.
 
 **Fact.** On 2 Nov 2026 the same chain rejected an immature coinbase spend, and the next block paid a 200000 sompi fee as KAS rather than as face. A second devnet at five percent paid 29 locks of 220000000 sompi and face 146666666. The model still marks a drop from 3 to 1 as insolvent at ratio 1.5, at either slice. A face of zero at a non-zero subsidy is a property of the integer, checked in the model, and it was not paid on these chains because they are at the month-0 subsidy. None of these runs is a market.
+
+**Fact.** Later the same day the half-split devnet accepted two holder redeems of `peg.sil` and then a third, after `refreshSolo` doubled the stored price. The third redeem paid the same 100000000 sompi for 50 cents that the first had paid for 100 cents. The script has a transaction id. The price has a key. `peg.sil` still has no liquidation entry. The `STP1` coinbase script was not changed.

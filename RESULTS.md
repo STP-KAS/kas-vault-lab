@@ -85,7 +85,7 @@ There is no expected-versus-observed line for a broadcast, because nothing was s
 
 **Fact.** The UTXO index, after those submits, showed immature KAS of 19800000000, 15400000000, and 17600000000 sompi. The accepted coinbases that created those outputs also carry STP faces of 13199999994, 10266666662, and 11733333328. That is 9, 7, and 8 rewards. 24 rewards are in the UTXO set. The remaining block has not been paid by a later block. Maturity is 1000 DAA, so none of this is spendable yet. Block `f04f163ddf87bdb0b63c760b85102f358af533b8b09d4dbde57f0ab44c3ecd93` (DAA 1) is one of those accepted coinbases: locked sompi 2200000000, face 1466666666.
 
-**Reasoning.** These threads are the only hash on this devnet, so the blocks they found are the chain. A public node that does not run this patch will not accept the blocks. The face uses a constant, not a market and not a vote of the miners. The locked sompi cannot be spent by the script as written. STP here is a number stored beside the lock, not a coin a stock wallet can send. `peg.sil` was not broadcast. There is still no peg txid.
+**Reasoning.** These threads are the only hash on this devnet, so the blocks they found are the chain. A public node that does not run this patch will not accept the blocks. The face uses a constant, not a market and not a vote of the miners. The locked sompi cannot be spent by the script as written. STP here is a number stored beside the lock, not a coin a stock wallet can send. `peg.sil` was not broadcast in this run. The later redeem ids are in the 2 Nov section below.
 
 ## Schedule and holdings, 1 Nov 2026
 
@@ -130,3 +130,40 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** `contracts/peg.sil` was compiled again with silverc 0.1.0. The JSON artifact is gitignored. It was not broadcast. `cli-debugger` was not on the machine. Public TN10 was not given a peg transaction. Neither devnet was given a peer.
 
 **Reasoning.** The 29 submits were not a hidden mint. The locks that exist are one per paid block. Five percent is a measured coinbase, and it is the same machine as the half: the miner is paid less KAS, the face follows the blocks a miner found, and the note still does not spend. A smaller slice does not make a large holder smaller in share, and it does not survive a crash that the ratio cannot survive. The fee test is the part of this pass that came out clean for the miner: the 200000 sompi were not diverted. The voluntary lock is still the shape that leaves that subsidy whole. This is a study. It does not claim a stablecoin.
+
+## A redeemable note, 2 Nov 2026
+
+**Fact.** `peg.sil` was submitted to the half-split devnet only. The driver was `script/devnet-peg.mjs`. It connected to `ws://127.0.0.1:17610` with borsh and mined with `stp-mine` through `grpc://127.0.0.1:16610`, one block at a time, to the third address. Public TN10 was left up. The five percent devnet was left up. No resolver, no faucet, and no peer was used. The node reported server 2.1.0 and network `devnet`. Virtual DAA was 1198 before the first peg transaction and 1209 after the last. The sink was `c5e7db72f4fed2eefcc45c276e48c5dc88a902064c6f23e86971822973824f41`. The model tests were still 28 pass. No private key is in this repo.
+
+**Fact.** The collateral was 300000000 sompi, 3 KAS. The carrier was 20000000 sompi. The ratio was 20000, the liquidation line 15000, and the bonus 500. The first stored price was 100000000 sompi per 1.00 of the note. `fairSompi(100, 100000000)` is 100000000 sompi, which is 1 KAS. The surplus after that redeem is 200000000 sompi. The oracle public key was `7411bd79d98cdc094b930750b983e3d857b5c53a4dadfa779c4a93fe7f2d9f83`. It was generated for this run. The scalar stays in `.local/` and is gitignored. The compiled redeem script was 9353 bytes. `cli-debugger` was still absent.
+
+**Fact.** Address one, `kaspadev:qp6zjhkx4z4j9tnqjttsg9ylhwwnmn2snu4re6pynxyyzwlpmf7uwsgjlwp8l`, locked vault A and minted the note to address two, `kaspadev:qpnayvcujj42uh8ct0kz6npqrh9rekudmre22cw473l8aguqq7wxcaeg0ju52`. Address two locked vault B and minted the note to address one. The two covenant ids were `e40a6989ec65243ee67361d334c7131776f1cea34f3913edf3d76bb74d62f44a` and `37419615c748e6d670d1790586f7b80c7000ed110b7b7cb01f7270c89c192cf3`.
+
+**Fact.** Accepted transactions, in order:
+
+| Step | Transaction | Fee sompi | What the chain held afterward |
+| --- | --- | --- | --- |
+| Open A | `89d2ef04dd78be123289c44de74d6b9ef619d8c1291a2ae32c882c5c3117d676` | 2000000 | 300000000 sompi on covenant A |
+| Seal A | `1cb0fdb87de831610be4a43f7a8ccb0091233acbd965e56fc8c32d7bd375bb00` | 2000000 | The same 300000000, sealed |
+| Mint A, 100 cents to address two | `dc62a9baf7652d4b202a7e2f3c3d5da97de3bbebfd20e93dc04e6843b0efc887` | 4000000 | Vault still 300000000. Note carrier 20000000 |
+| Open B | `85309cee4c3ec66a92542d7cec189f40a7a46ffff918b90470c4763cf517d6be` | 2000000 | 300000000 sompi on covenant B |
+| Seal B | `c033c81235992143c6d9f9203be193cf5dbc38a7677830584417c87be735c6ce` | 2000000 | The same 300000000, sealed |
+| Mint B, 100 cents to address one | `75c460150dd4d7e44e6db3c30956a306ca01e8da5420a3f4958bd1382d6bebba` | 4000000 | Vault still 300000000. Note carrier 20000000 |
+| Redeem A, holder is address two | `111ad44f538660a589ad04d8baa3e13ab99667e8d6f997eb8e5a20b54a7dbd6b` | 6913900 | Surplus 200000000. Pay 100000000. Carrier 20000000 returned |
+| Redeem B, holder is address one | `cc103e870b948460fc85206f5820ee1ceea6fd5dfbc282a5554c1da7c9881413` | 6913900 | Surplus 200000000. Pay 100000000. Carrier 20000000 returned |
+
+**Fact.** The fee on each of those transactions came from a separate mature output. On redeem A the fee coin was 1871800000 sompi and the change was 1864886100, which is the 6913900 fee. The covenant inputs were 300000000 plus the 20000000 carrier. The covenant outputs were 200000000 surplus, 100000000 pay, and 20000000 carrier. Those three sum to the two covenant inputs. The same balance holds for redeem B. The miner of the including block was address three, `kaspadev:qqjpnvtfkdc0zp84ph9xhk64mt530kamdd9v4wszuxfuvrks6j3qu5hct3g6f`. The miner was not paid from the lock.
+
+**Fact.** Four transactions were rejected. The node text on each script failure was `failed to verify the signature script: script ran, but verification failed`. It did not name the `require`. The matching transaction that kept the rule was later accepted.
+
+- `b60b011092cba28dbd24391cb5260f02a246c5e7c23f44658be82e640c1c758d` was the first stale mint, with input sequence 0. The node said `transaction input #0 is not finalized`. This devnet's median time was behind the wall clock, so a lock time of about three minutes ago was still in the future for the node.
+- `a44e82ce8556ef7c34d156acc59889ba5f6c268e86b7a250380f0120753069e0` was the same expired window after every input sequence was set to the maximum. The script failed. The fresh window then minted.
+- `fff9190767c9722f62983b0b3e6fbc03e450e40978ffa0bcec2f1b4ba1bad1e8` asked to mint 200 cents against 3 KAS. The 2.0 ratio needs 4 KAS for that face. The script failed. The 100-cent mint was accepted.
+- `6fbdb4044f09dc4fc80fc72d93b2ab96a8beeb1ff8966c84b297a0c95bf3a510` paid 50000000 sompi instead of 100000000 and left 250000000. The script failed. The fair redeem was accepted.
+- `17bcaab55fd0d6887aba4f35b0190534ecb49bffc28467cf967949609634b69a` spent vault A together with the note from vault B. The script failed. Each note then redeemed against its own vault.
+
+**Fact.** After redeem A, covenant A still held 200000000 sompi and the stored price was still 100000000. `refreshSolo` was then accepted as `117bc473d37a122e67d5f0657c19cc8fb3833084ea970023a0c52d457c015da8`, fee 4264400 sompi, from the oracle signature alone. The vault value stayed 200000000. The stored price became 200000000. Mint `5b0f95790a89a9d760c2ac9d0f9b8e4739b0e2d93936967fe690e9b459a07db3` created a 50-cent note against that 2 KAS, fee 4000000. Redeem `49bc0d8a09eb556e5f2eb28dfa5572ae832321e8ecdc49705cb670f5516e86a3` paid 100000000 sompi to address two, left 100000000 sompi in the vault, and returned the 20000000 carrier. The fee was 7740800 sompi from a separate 20000000 output, whose change was 12259200. Fifty cents at the new price paid the same 1 KAS that one hundred cents had paid at the old price.
+
+**Fact.** The `STP1` coinbase outputs were not spent in this pass. Their script still ends in the opcode that rejects. This redeem does not make those outputs payable.
+
+**Reasoning.** A note that can be redeemed now exists on this private devnet, as two covenant lineages and then a third mint on the first lineage after the quote moved. The holder received the sompi the stored price named, the surplus stayed, and the fee was extra sompi. The same run shows why that is not a stablecoin. The price was a key generated on this desk. That key rewrote the price, without the vault owner's signature, and the payout followed. Nobody froze a transfer. Nobody proved a market. The coinbase lock is still the other door, and it still does not pay.

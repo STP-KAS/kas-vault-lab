@@ -6,7 +6,7 @@ Experimental only. This is a study. We are not claiming a stablecoin, a product,
 
 ## What we are doing
 
-We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a covenant that has not been broadcast, a short public testnet sample, and a private devnet whose coinbase pays KAS and locks the rest.
+We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet whose coinbase pays KAS and locks the rest, and a `peg.sil` redeem on that same devnet.
 
 ## Why
 
@@ -24,6 +24,7 @@ Kaspa already orders transactions, fast, under proof of work. A unit people can 
 | 1 Nov 2026 | The same private devnet, six CPU threads, then one confirming block | Block count and virtual DAA went from 25 to 1196, then to 1197. Mature KAS was spent. The node rejected the lock. |
 | 2 Nov 2026 | The same private devnet, localhost | The block field is virtual DAA, not a census. An immature spend was rejected. One more block paid a 200000 sompi fee entirely as KAS. |
 | 2 Nov 2026 | A second private devnet, other ports, other data directory | Five percent of the subsidy, 30 blocks. Free 41.8 KAS, lock 2.2 KAS, face 146666666. The source constant was put back to half. |
+| 2 Nov 2026 | The half-split devnet, localhost only | Two `peg.sil` vaults. Each holder redeemed 1 KAS and left surplus. The lab quote key then doubled the stored price, and 50 cents paid the same 1 KAS. |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it. They hash for KAS. They do not lock, mint, or redeem.
 
@@ -32,7 +33,7 @@ The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN1
 These are different promises. None of them has been chosen as a product.
 
 - A receipt returns the same sompi. The holder keeps KAS volatility.
-- A person locks KAS they already hold. Each lock is its own UTXO. The miner is paid the full KAS reward. Redeem needs a quote. That quote is unsolved. `peg.sil` is this shape, and it has not been broadcast.
+- A person locks KAS they already hold. Each lock is its own UTXO. The miner is paid the full KAS reward. Redeem needs a quote. `peg.sil` is this shape. On 2 Nov 2026 two such locks redeemed on the private devnet. The quote was a lab key, and that key changed the payout.
 - A coinbase can lock part of the subsidy and store a face. The first private devnet ran this at half, so both outputs were large enough to see. Half is a lab size. After maturity the free KAS spent like ordinary KAS, and the node rejected the lock. A second private devnet ran the same rule at five percent: free 41.8 KAS, lock 2.2 KAS, face 146666666. Five percent is still a haircut. It does not survive a deeper price drop than the half, because the crash line is the collateral ratio. The face is not a coin a wallet can send. This is not a public rule.
 - A shared pot of many keys can refuse one signature. Every holder then waits. That is a freeze. It is not built.
 - A company can mint against reserves and redeem the reserve asset, and can keep a freeze at its own door. That door is not the proof of work. It is not built here.
@@ -51,10 +52,12 @@ A few sentences in this work were wrong, or too final.
 - The balance reader dropped one face after the free output of that same coinbase was spent. The reader only counts a coinbase while an address output of it remains. The second rejection from the node is the evidence that the lock was still there.
 - The gap between 1200 success reports and 1171 new blocks was called unexplained. That was incomplete. The field printed as `blocks` is `estimate_block_count`, which is virtual DAA minus the retention root. It does not include non-DAA blocks. The 1 Nov log accepted 1226 submits. The selected chain at virtual DAA 1197 is 1197 of those, plus genesis in the block walk. The other 29 did not become an extra face. The accepted locks are one per paid block, each exactly half of one subsidy.
 - Five percent was then run, because "a smaller diversion has not been run" was true and is no longer true. The smaller slice still pays the miner less than the full subsidy. `survivesGap` does not take the slice as an argument. A higher collateral ratio survives a deeper drop, and an immediate redeem then returns less KAS. A smaller slice does not cap a large miner's share of the face.
+- "`peg.sil` has no transaction id" was true through the five percent run. It is no longer true. The redeem ids are in `RESULTS.md`. A confirmed redeem is a covenant UTXO on this private devnet. It is not a market price. The same lab key then stored 200000000 in place of 100000000, and a 50-cent note paid the same 1 KAS the 100-cent note had paid.
+- The first stale mint was rejected as not finalized. Sequence 0 and a lock time near the wall clock were ahead of this devnet's median time. After every input sequence was the maximum, the script rejected the expired window. That is not a test of mining a still-valid signature later.
 
 ## What is still open
 
-The quote. A stale mint window. Finality. Two covenant lineages that are not one currency. `peg.sil` does not liquidate, and it has no transaction id. It compiled again on 2 Nov 2026 with silverc 0.1.0. `cli-debugger` is still not on this machine, so that contract has no debugger count. The devnet lock still cannot pay. Five percent of the subsidy was run. It is the same door as the half. At the tail of the integer, a subsidy of 29 sompi with a five percent slice locks 1 sompi and mints a face of 0. Kaspa's own subsidy already ends, after 426 month entries, and the v2.1.0 test expects 0 after 36 yearly steps. This study does not lengthen that table. A never-ending mined face would be a second monetary policy.
+The quote is a lab key, and this run used that key to change the payout. A signature that is valid when it is signed can still be mined later; this run showed an already-expired window failing, and a lock time ahead of the devnet median failing. Finality depth was not waited out. Two covenant ids redeemed on their own vaults. A spend that paired one vault with the other note was rejected, and the node did not name the clause. `peg.sil` does not liquidate. The devnet `STP1` lock still cannot pay. Five percent of the subsidy was run. It is the same door as the half. At the tail of the integer, a subsidy of 29 sompi with a five percent slice locks 1 sompi and mints a face of 0. Kaspa's own subsidy already ends, after 426 month entries, and the v2.1.0 test expects 0 after 36 yearly steps. This study does not lengthen that table. A never-ending mined face would be a second monetary policy. `cli-debugger` is still not on this machine, so `peg.sil` has no debugger count.
 
 The path that stays inside the constraints is the voluntary lock, the full KAS reward, and no freeze. The coinbase split stays on the list because the bytes were run at two sizes, a mature free output was spent, a fee stayed in that free output, and the lock was rejected. Both stay open as studies. Neither is a claim.
 
@@ -72,7 +75,7 @@ The path that stays inside the constraints is the voluntary lock, the full KAS r
 | [LIMITS.md](LIMITS.md) | What is still not a stablecoin |
 | [ECONOMICS.md](ECONOMICS.md) | How this differs from the square's receipts |
 | [PROPOSALS.md](PROPOSALS.md) | Sentences for the square. This repo does not patch that tree |
-| [RESULTS.md](RESULTS.md) | What was and was not submitted. No peg txid. Public TN10 paid ordinary tKAS. The private devnet paid KAS and a locked face, then spent the mature KAS and rejected the lock |
+| [RESULTS.md](RESULTS.md) | What was and was not submitted. Public TN10 paid ordinary tKAS. The private devnet paid KAS and a locked face, rejected that lock, then redeemed two `peg.sil` notes |
 
 ## Run
 
@@ -96,6 +99,8 @@ cli-debugger contracts/vault.sil --run-all
 ```
 
 `node script/tn10.mjs health` and `node script/tn10.mjs run` belong to the 27 Oct driver. They talk to Testnet-10. They do not submit `peg.sil`.
+
+`node script/devnet-peg.mjs` is the 2 Nov desk driver. It talks only to `ws://127.0.0.1:17610` and mines only through `grpc://127.0.0.1:16610`. It refuses a public network argument. The keys and the oracle scalar stay out of git.
 
 ## The 27 Oct lab
 

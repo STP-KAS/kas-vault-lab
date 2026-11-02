@@ -75,7 +75,7 @@ The model checks the rest: the month index ignores hashrate, the haircut is real
 
 ## Left open
 
-The quote is a signature, not a market and not a proof. Finality is longer than acceptance. The note's carrier is not a fee. Two vault ids are two notes. `peg.sil` does not liquidate and was not broadcast. A passing model test is not a node.
+The quote is a signature, not a market and not a proof. Finality is longer than acceptance. The note's carrier is not a fee. Two vault ids are two notes. `peg.sil` does not liquidate. It had not been broadcast when this section was written. A passing model test is not a node.
 
 ## Continued
 
@@ -141,4 +141,16 @@ This section is a study. It does not issue a coin and it does not ask a public n
 
 **Reasoning.** The tail is a reason this formula is not an emission schedule. A note that is a fraction of the Kaspa subsidy inherits the year the subsidy reaches zero, and it goes quiet earlier than that, while still locking dust. Giving the face its own never-ending schedule would be a second monetary policy. This study does not add one.
 
-**Reasoning.** The doors stay side by side. A person can lock KAS they already hold, and the miner is paid the full reward. A coinbase can lock a slice, and both a half and a five percent slice have now been paid by a private node and still cannot be spent. A company can mint at its own door, and that door was not built. A shared pot of many keys can refuse one signature, and that remains a freeze. None of these is a price. `peg.sil` still compiles and still has no transaction id. This is a study. We are not claiming a stablecoin.
+**Reasoning.** The doors stay side by side. A person can lock KAS they already hold, and the miner is paid the full reward. A coinbase can lock a slice, and both a half and a five percent slice have now been paid by a private node and still cannot be spent. A company can mint at its own door, and that door was not built. A shared pot of many keys can refuse one signature, and that remains a freeze. None of these is a price. This is a study. We are not claiming a stablecoin.
+
+## The note that redeemed, 2 Nov 2026
+
+**Fact.** The numbers are in `RESULTS.md`. On the half-split devnet, two people locked 3 KAS each. Each minted 100 cents to the other. Each holder redeemed. The chain paid 1 KAS to the holder, left 2 KAS in the vault, and returned the 0.2 KAS carrier. The fee was a separate coin. A stale mint, an over-ratio mint, a short pay, and a redeem that crossed the two covenant ids were rejected. The node said the script ran and verification failed. It did not name the rule. The transaction that kept the rule was accepted afterward.
+
+**Fact.** The lab oracle key then called `refreshSolo` on the 2 KAS surplus. The vault owner's signature was not required. The stored price changed from 100000000 to 200000000 and the sompi in the vault stayed 200000000. A new 50-cent note, minted at that price against the same vault, redeemed for 1 KAS and left 1 KAS. The face was half. The sompi were the same, because the key had doubled the price.
+
+**Reasoning.** The sentence that a note does not exist was the right dissatisfaction, and it is now the wrong sentence for this devnet. A lock was created, a holder redeemed it, and the surplus stayed where the script said it stays. That is a covenant UTXO with a transaction id. It is the voluntary lock this study already preferred, exercised by two addresses, with the miner still paid by finding the block rather than by taking the collateral.
+
+**Reasoning.** The same afternoon is why the redeem does not close the price. The quote moved because a key we generated signed a new number. One hundred cents and fifty cents paid the same kas. A shop that trusted the first price would have been paid under the second price with no change to the sompi already sitting in the vault. Proof of work ordered both transactions. It did not choose the number. The `STP1` outputs from the coinbase are still unspendable. They were not patched, and this redeem does not apply to them.
+
+**Reasoning.** Finality is still open in two concrete ways. The first stale mint never reached the script, because the devnet's median time had not caught the wall clock. The later stale mint reached the script only because every input sequence was maxed, which makes Kaspa treat the lock time as already final. An expired window failed. A window that is still valid, and is mined after it should have expired, was not the test. Waiting out Kaspa's finality depth was not the test either. This is a study. We are not claiming a stablecoin.
