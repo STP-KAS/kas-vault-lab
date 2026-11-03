@@ -6,7 +6,7 @@ Experimental only. This is a study. We are not claiming a stablecoin, a product,
 
 ## What we are doing
 
-We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and one position that stepped its own quote on that devnet.
+We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and two positions on that devnet. The second one stepped twice, and the redeem paid the second quote.
 
 ## Why
 
@@ -34,6 +34,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 3 Nov 2026 | The public Kaspa Dollar pages, read here, no new chain | [Their vault bands, their miner median, and a fee beside the subsidy. The whitepaper page says it publishes on 8 November 2026.](STUDY.md#kaspa-dollar-read-on-3-nov-2026) |
 | 3 Nov 2026 | The same half-split devnet, localhost only | [Five times on their page, and a DAA wait of 8 accepted twice. The one-entry form of the same wait was rejected.](STUDY.md#their-hours-read-on-3-nov-2026) |
 | 3 Nov 2026 | The same half-split devnet, localhost only | [A position locked 2 KAS. One step moved the quote from 300000000 to 400000000. The holder redeemed 0.8 KAS and left 1.2 KAS.](STUDY.md#the-position-3-nov-2026) |
+| 3 Nov 2026 | The same half-split devnet, localhost only | [A second covenant stepped from 400000000 to 533333333. The holder redeemed 1.06666667 KAS and left 0.93333333 KAS.](STUDY.md#a-second-step-3-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -41,7 +42,7 @@ The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN1
 
 These are the limits that later measurements did not close. Settled corrections are in [Pushback, kept on 3 Nov 2026](STUDY.md#pushback-kept-on-3-nov-2026).
 
-- The quote is a lab key. On `peg.sil` an outstanding note keeps the mint quote, and when nothing is outstanding the same key still sets the next quote. Covenant A still has the 2 Nov script. On `position.sil` there is no entry that stores a quote from the key alone. While a note is outstanding, that key can still move the quote by one capped step, and the holder does not sign the step. [The quote the holder already had.](STUDY.md#the-quote-the-holder-already-had-3-nov-2026) [The position.](STUDY.md#the-position-3-nov-2026)
+- The quote is a lab key. On `peg.sil` an outstanding note keeps the mint quote, and when nothing is outstanding the same key still sets the next quote. Covenant A still has the 2 Nov script. On `position.sil` there is no entry that stores a quote from the key alone. While a note is outstanding, that key can still move the quote by one capped step, and the holder does not sign the step. On the second covenant it did that twice, and the redeem paid 106666667 sompi at quote 533333333. [The quote the holder already had.](STUDY.md#the-quote-the-holder-already-had-3-nov-2026) [The position.](STUDY.md#the-position-3-nov-2026)
 - A mint signed inside its window was mined after the window. That script reads the lock time the signer wrote. The position's mint uses the same window. The position's step uses a DAA count, and the included step's lock was 1262 in a block whose header DAA is 1263. [The window that was already signed.](STUDY.md#the-window-that-was-already-signed-2-nov-2026)
 - `peg.sil` does not liquidate. `position.sil` stores a liquidation ratio and a bonus, and no entry spends them. The older covenant ids and this position are separate notes. The `STP1` lock does not pay. No freeze was added. [After maturity.](STUDY.md#after-maturity-1-nov-2026)
 - A unit mined by hash, immovable by a large holder, with no issuer and no freeze, that still pays miners the full subsidy, does not close as one machine. What stays inside those constraints is the voluntary lock, the full KAS reward, and no freeze. [Schedule, holdings, and a safe place.](STUDY.md#schedule-holdings-and-a-safe-place)
@@ -59,7 +60,7 @@ These are different promises. None of them has been chosen. [The doors, side by 
 - A company can mint against reserves and redeem at its own door, and can keep a freeze there. [What a Tether-like issuer can do here.](DOORS.md#what-a-tether-like-issuer-can-do-here) It is not built here.
 - [Kaspa Dollar's public pages](STUDY.md#kaspa-dollar-read-on-3-nov-2026), read again on 3 Nov 2026, describe a vault at 2.5 times, a liquidation back toward 2.0, and a median of miner prices. The block reward stays whole. The covenants are unpublished. `peg.sil` was not changed to those ratios.
 - A rollup puts a sequencer back in front of the payments. Refused as an ordering design.
-- The position is the practice this desk would keep while every shape above stays. One person locks KAS they already hold. The miner is paid the full KAS reward. There is no company, no shared pot, no freeze, and no coinbase split. The quote may move by one step, from three quarters through four thirds, and only after a DAA wait. Redeem pays the quote that was stored. [The position, 3 Nov 2026.](STUDY.md#the-position-3-nov-2026)
+- The position is the practice this desk would keep while every shape above stays. One person locks KAS they already hold. The miner is paid the full KAS reward. There is no company, no shared pot, no freeze, and no coinbase split. The quote may move by one step, from three quarters through four thirds, and only after a DAA wait. Redeem pays the quote that was stored. A second covenant on the same devnet stepped once more, from 400000000 to 533333333, and the redeem paid that quote. [The position, 3 Nov 2026.](STUDY.md#the-position-3-nov-2026) [A second step, 3 Nov 2026.](STUDY.md#a-second-step-3-nov-2026)
 
 ## Pushback
 
@@ -77,7 +78,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 
 | File | What it is |
 | --- | --- |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the position on 3 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the second step on 3 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |

@@ -29,7 +29,7 @@ cli-debugger contracts/vault.sil --run-all
 
 `node script/devnet-clock.mjs --again` reads the second DAA spend. It talks to the same half-split port and refuses a public network argument. A later `--again` prints the recorded row. It does not fund another clock, and it does not spend `peg.sil`.
 
-`node script/devnet-position.mjs` talks to the same half-split port and refuses any other network. While the phase file says redeemed, it prints the recorded redeem and returns. It does not open a second position, and it does not spend `peg.sil` or the clocks. The fee floor in that driver is 5000000 sompi. A body at 2000000 was under the node's transient-mass minimum for this contract.
+`node script/devnet-position.mjs` talks to the same half-split port and refuses any other network. While its phase file says redeemed, it prints the recorded redeem and returns. `node script/devnet-position.mjs --compound` uses a second phase file. While that file says redeemed, it prints that redeem and returns. It does not open a third covenant, and it does not spend `peg.sil` or the clocks. The fee floor is 5000000 sompi. The picker asks for a coin that can cover 100000000 sompi, because a climbed fee of 10000000 does not fit in the 5735600 coin. A fee climb builds a new covenant binding on every attempt. A body at 2000000 was under the node's transient-mass minimum for this contract.
 
 ## The 27 Oct lab
 

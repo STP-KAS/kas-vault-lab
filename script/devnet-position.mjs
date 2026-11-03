@@ -14,6 +14,7 @@ import { schnorr } from "@noble/curves/secp256k1";
 import { blake3 } from "@noble/hashes/blake3";
 import { num2bin8, signPrice } from "./oracle.mjs";
 import { encodeEntry, withRedeem } from "./sigscript.mjs";
+import { quoteStepAllows } from "../model/position.mjs";
 
 const URL = "ws://127.0.0.1:17610";
 const GRPC = "grpc://127.0.0.1:16610";
@@ -25,7 +26,8 @@ const KEYS = "C:\\kaspa-stpnet\\wallets\\keys.txt";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SOURCE = join(ROOT, "contracts", "position.sil");
 const LOCAL = join(ROOT, ".local");
-const STATE_FILE = join(LOCAL, "devnet-position-state.json");
+const COMPOUND = process.argv.includes("--compound");
+const STATE_FILE = join(LOCAL, COMPOUND ? "devnet-position-compound-state.json" : "devnet-position-state.json");
 const ORACLE_FILE = join(LOCAL, "devnet-oracle.json");
 const JOURNAL = join(ROOT, "results", "devnet-position.jsonl");
 
@@ -39,6 +41,9 @@ const CENTS = 20;
 const PAY = 80_000_000n;
 const LEFT = 120_000_000n;
 const FEE_FLOOR = 5_000_000n;
+// The smallest coin above the floor is 5735600. A fee climb to 10000000
+// makes its change -4264400 and the submit stops. Ask for room instead.
+const FEE_ROOM = 100_000_000n;
 const MATURITY = 1000n;
 const MAX_SEQUENCE = (2n ** 64n) - 1n;
 const ZERO = Buffer.alloc(32);
@@ -70,7 +75,19 @@ function hexOf(value) {
 
 function journal(row) {
   mkdirSync(dirname(JOURNAL), { recursive: true });
-  appendFileSync(JOURNAL, `${JSON.stringify({ utc: new Date().toISOString(), ...row })}\n`);
+  const body = COMPOUND ? { run: "compound", ...row } : row;
+  appendFileSync(JOURNAL, `${JSON.stringify({ utc: new Date().toISOString(), ...body })}\n`);
+}
+
+function tried(label) {
+  if (!existsSync(JOURNAL)) return null;
+  let found = null;
+  for (const line of readFileSync(JOURNAL, "utf8").split(/\n/)) {
+    if (!line.trim()) continue;
+    const row = JSON.parse(line);
+    if (row.run === "compound" && row.label === label && row.accepted === false && row.txid) found = row;
+  }
+  return found;
 }
 
 function loadJson(path, fallback) {
@@ -235,8 +252,11 @@ function covOf(row) {
   return id ? hexOf(id.toString()) : "";
 }
 
+const pinned = [];
+
 async function utxosOf(rpc, address) {
   const bag = await rpc.getUtxosByAddresses([address]);
+  pinned.push(bag);
   return bag.entries || [];
 }
 
@@ -290,19 +310,49 @@ function binding(kaspa, id, index = 0) {
   return new kaspa.CovenantBinding(index, new kaspa.Hash(id));
 }
 
+async function reloadHandles(rpc, handles) {
+  const fresh = [];
+  for (const handle of handles) {
+    const bag = await utxosOf(rpc, handle.address);
+    const hit = bag.find((item) => hexOf(item.outpoint.transactionId) === handle.id && Number(item.outpoint.index) === handle.index);
+    if (!hit) throw new Error(`missing coin ${handle.id.slice(0, 8)}:${handle.index}`);
+    fresh.push(hit);
+  }
+  return fresh;
+}
+
 async function submit(kaspa, rpc, spec) {
   let fee = FEE_FLOOR;
   let budget = 40;
   let lastError = "";
   let localId = "";
+  const handles = spec.rows.map((row) => ({
+    id: hexOf(row.outpoint.transactionId),
+    index: Number(row.outpoint.index),
+    address: row.address.toString(),
+  }));
+  // A fee climb builds the transaction twice. The output constructor moves the
+  // binding, so the second build has to make a new one or the covenant is gone.
+  const outputPlans = spec.outputs.map((item) => ({
+    value: item.value,
+    script: item.script,
+    auth: item.covenant ? Number(item.covenant.authorizingInput) : null,
+    covenantId: item.covenant ? hexOf(item.covenant.covenantId) : null,
+  }));
   for (let attempt = 1; attempt <= 24; attempt += 1) {
+    if (attempt > 1) spec.rows = await reloadHandles(rpc, handles);
     const inputSum = spec.rows.reduce((sum, row) => sum + BigInt(row.amount), 0n);
-    const fixedSum = spec.outputs.reduce((sum, item) => sum + BigInt(item.value), 0n);
+    const fixedSum = outputPlans.reduce((sum, item) => sum + BigInt(item.value), 0n);
     const change = inputSum - fixedSum - fee;
-    if (change < 1000n) throw new Error(`${spec.label} change would be ${change}`);
-    const outputs = [...spec.outputs, { value: change, script: spec.changeScript, covenant: null }].map((item) =>
-      outputOf(kaspa, item.value, item.script, item.covenant),
-    );
+    if (change < 1000n) {
+      const inputs = spec.rows.map((row) => BigInt(row.amount).toString()).join("+");
+      const prior = lastError ? ` after ${lastError}` : "";
+      throw new Error(`${spec.label} change would be ${change} fee=${fee} inputs=${inputs}${prior}`);
+    }
+    const outputs = [...outputPlans, { value: change, script: spec.changeScript, auth: null, covenantId: null }].map((item) => {
+      const covenant = item.covenantId == null ? null : new kaspa.CovenantBinding(item.auth, new kaspa.Hash(item.covenantId));
+      return outputOf(kaspa, item.value, item.script, covenant);
+    });
     const inputs = spec.rows.map((row, index) => ({
       previousOutpoint: { transactionId: row.outpoint.transactionId, index: row.outpoint.index },
       signatureScript: "",
@@ -321,6 +371,11 @@ async function submit(kaspa, rpc, spec) {
       payload: "",
     });
     tx.version = 1;
+    for (let i = 0; i < outputPlans.length; i += 1) {
+      if (outputPlans[i].covenantId && !tx.outputs[i].covenant) {
+        throw new Error(`${spec.label} output ${i} lost its covenant`);
+      }
+    }
     if (spec.genesis) tx.populateGenesisCovenants([new kaspa.GenesisCovenantGroup(0, spec.genesisOutputs || [0])]);
     for (const sig of spec.sigs) {
       tx.inputs[sig.input].signatureScript = entryOf(kaspa, sig.built, sig.entry, materialize(sig.args, blankSig()));
@@ -373,6 +428,7 @@ async function submit(kaspa, rpc, spec) {
         }
       }
       if (/fee|mass/i.test(lastError) && attempt < 4) {
+        say(`${spec.label} fee ${fee} doubled after ${lastError}`);
         fee *= 2n;
         continue;
       }
@@ -498,12 +554,9 @@ function writeDump(name, tx, rows) {
   return path;
 }
 
-function feeSigOk(kaspa, tx) {
-  const input = tx.inputs[2];
-  const script = bytesOf(input.signatureScript);
-  if (script.length !== 66 || script[0] !== 0x41) return { ok: false, reason: `fee script ${script.length}` };
+function sighashAll(kaspa, tx, index) {
+  const input = tx.inputs[index];
   const spk = bytesOf(input.utxo.scriptPublicKey.script);
-  if (spk.length < 33 || spk[0] !== 0x20) return { ok: false, reason: `fee spk ${spk.length}` };
   const prev = hashChunks(kaspa, tx.inputs.map((row) => Buffer.concat([
     bytesOf(row.previousOutpoint.transactionId),
     le(4, row.previousOutpoint.index),
@@ -517,12 +570,11 @@ function feeSigOk(kaspa, tx) {
     else parts.push(Buffer.from([0]));
     return Buffer.concat(parts);
   }));
-  const id = bytesOf(input.previousOutpoint.transactionId);
-  const msg = hashChunks(kaspa, [
+  return hashChunks(kaspa, [
     le(2, tx.version),
     prev,
     seqs,
-    id,
+    bytesOf(input.previousOutpoint.transactionId),
     le(4, input.previousOutpoint.index),
     le(2, input.utxo.scriptPublicKey.version),
     le(8, spk.length),
@@ -536,8 +588,16 @@ function feeSigOk(kaspa, tx) {
     Buffer.alloc(32),
     Buffer.from([1]),
   ]);
+}
+
+function feeSigOk(kaspa, tx) {
+  const input = tx.inputs[2];
+  const script = bytesOf(input.signatureScript);
+  if (script.length !== 66 || script[0] !== 0x41) return { ok: false, reason: `fee script ${script.length}` };
+  const spk = bytesOf(input.utxo.scriptPublicKey.script);
+  if (spk.length < 33 || spk[0] !== 0x20) return { ok: false, reason: `fee spk ${spk.length}` };
   try {
-    return { ok: schnorr.verify(script.subarray(1, 65), msg, spk.subarray(1, 33)), reason: "checked" };
+    return { ok: schnorr.verify(script.subarray(1, 65), sighashAll(kaspa, tx, 2), spk.subarray(1, 33)), reason: "checked" };
   } catch (error) {
     return { ok: false, reason: String(error && error.message ? error.message : error).slice(0, 80) };
   }
@@ -598,7 +658,7 @@ async function inspectStep(kaspa, rpc, wallets, oracle, vaultBuilt, noteBuilt) {
       covenant: binding(kaspa, vault.covenantId, 1),
     },
   ];
-  const fee = await pickCoin(rpc, wallets.one, dag.virtualDaa, FEE_FLOOR, new Set());
+  const fee = await pickCoin(rpc, wallets.one, dag.virtualDaa, FEE_ROOM, new Set());
   const stepSig = signStep(NEXT, QUOTE, vault.covenantId, oracle.priv);
   const id = Buffer.from(hexOf(vault.covenantId), "hex");
   const message = Buffer.concat([num2bin8(NEXT), num2bin8(QUOTE), id]);
@@ -727,6 +787,30 @@ async function main() {
       say(`already redeemed txid=${state.redeem.txid} pay=${state.redeem.pay}`);
       return;
     }
+
+    async function submitOnce(spec) {
+      // Build once. A second build reads the same wasm UTXO after the first
+      // call and the fee signature no longer matches the coin.
+      const preview = await submit(kaspa, rpc, { ...spec, dry: true });
+      const refused = new Set(state.rejected || []);
+      if (refused.has(preview.id)) {
+        say(`${spec.label} skip ${preview.id}`);
+        return { accepted: false, id: preview.id, error: "already rejected", skipped: true };
+      }
+      try {
+        const result = await rpc.submitTransaction({ transaction: preview.tx, allowOrphan: false });
+        const id = hexOf(result.transactionId || preview.tx.id);
+        if (id !== preview.id) say(`${spec.label} preview=${preview.id} sent=${id}`);
+        return { accepted: true, id, fee: preview.fee, budget: preview.budget };
+      } catch (error) {
+        const lastError = hide(error && error.message ? error.message : error);
+        say(`${spec.label} rejected ${lastError}`);
+        state.rejected = [...(state.rejected || []), preview.id];
+        saveJson(STATE_FILE, state);
+        journal({ label: spec.label, accepted: false, error: lastError, txid: preview.id });
+        return { accepted: false, error: lastError, id: preview.id };
+      }
+    }
     const dag = await dagOf(rpc);
     say(`virtualDaa=${dag.virtualDaa} phase=${state.phase}`);
     journal({ label: "position-dag", virtualDaa: dag.virtualDaa.toString(), phase: state.phase, sink: dag.sink });
@@ -740,7 +824,7 @@ async function main() {
     const redeemedFields = vaultOf(wallets.one.pub, oracle.pub, { sealed: 1, debt: 0, quote: NEXT });
 
     if (state.phase === "start") {
-      const coin = await pickCoin(rpc, wallets.one, dag.virtualDaa, COLLATERAL + FEE_FLOOR, new Set());
+      const coin = await pickCoin(rpc, wallets.one, dag.virtualDaa, COLLATERAL + FEE_ROOM, new Set());
       const built = compile(openFields);
       const opened = await submit(kaspa, rpc, {
         label: "position-open",
@@ -770,7 +854,7 @@ async function main() {
       const sitting = await findRow(rpc, kaspa, built, COLLATERAL);
       if (!sitting) throw new Error("open output is not spendable");
       const next = compile(sealedFields);
-      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_FLOOR, new Set());
+      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set());
       const sealed = await submit(kaspa, rpc, {
         label: "position-seal",
         rows: [sitting.row, fee],
@@ -804,7 +888,7 @@ async function main() {
       const note = compile(noteFields);
       const spot = windowNow();
       const priced = signPrice(QUOTE, spot.notBefore, spot.expiry, oracle.priv);
-      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, CARRIER + FEE_FLOOR, new Set());
+      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, CARRIER + FEE_ROOM, new Set());
       const sent = await submit(kaspa, rpc, {
         label: "position-mint",
         rows: [sitting.row, fee],
@@ -890,7 +974,7 @@ async function main() {
       ];
       const tracing = process.argv.includes("--trace");
       const stepOnly = process.argv.includes("--step");
-      const feeDouble = await pickCoin(rpc, wallets.one, waited.now.virtualDaa, FEE_FLOOR, new Set());
+      const feeDouble = await pickCoin(rpc, wallets.one, waited.now.virtualDaa, FEE_ROOM, new Set());
       const doubled = stepOnly ? { accepted: false, id: "skipped", error: "cap already traced" } : await submit(kaspa, rpc, {
         label: "position-double",
         dry: tracing,
@@ -931,7 +1015,7 @@ async function main() {
       say(`double accepted=${doubled.accepted} ${doubled.error || doubled.id}`);
       if (tracing && doubled.tx) say(`double dump=${writeDump("position-double-trace.json", doubled.tx, [againVault.row, againNote.row, feeDouble])}`);
       if (doubled.accepted) throw new Error("a doubling was accepted");
-      const feeStep = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_FLOOR, new Set([
+      const feeStep = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set([
         `${hexOf(feeDouble.outpoint.transactionId)}:${feeDouble.outpoint.index}`,
       ]));
       say(`step coin=${feeStep.amount} daa=${daaOf(feeStep)} held=${feeDouble.amount}`);
@@ -1016,14 +1100,204 @@ async function main() {
       say(`step txid=${moved.id} born=${after.born} mines=${waited.mines}`);
     }
 
-    if (state.phase === "stepped") {
+    if (COMPOUND && state.phase === "stepped") {
+      const third = 533_333_333;
+      const over = 600_000_000;
+      if (!quoteStepAllows(NEXT, third)) throw new Error("third quote is outside the cap");
+      if (quoteStepAllows(NEXT, over)) throw new Error("over quote is inside the cap");
+      if (quoteStepAllows(QUOTE, third)) throw new Error("third quote fits in one step from the mint");
+      const pay = (BigInt(CENTS) * BigInt(third) + 99n) / 100n;
+      const left = COLLATERAL - pay;
+      if (pay < 20_000_000n || left < 20_000_000n) throw new Error("second redeem is dust");
+      const vaultBuilt = compile(steppedFields);
+      const noteBuilt = compile(steppedNote);
+      const sittingVault = await findRow(rpc, kaspa, vaultBuilt, COLLATERAL);
+      const sittingNote = await findRow(rpc, kaspa, noteBuilt, CARRIER);
+      if (!sittingVault || !sittingNote) throw new Error("stepped position is not spendable");
+      if (String(sittingVault.born) !== String(state.step.born)) throw new Error("step birth moved");
+      const oldNeed = BigInt(state.step.need);
+      const newNeed = BigInt(sittingVault.born) + BigInt(HOUR) - 1n;
+      if (newNeed === oldNeed) throw new Error("second lock matches the first");
+      const thirdFields = vaultOf(wallets.one.pub, oracle.pub, { sealed: 1, debt: CENTS, quote: third });
+      const thirdNoteFields = noteOf(wallets.two.pub, oracle.pub, third);
+      const thirdVault = compile(thirdFields);
+      const thirdNote = compile(thirdNoteFields);
+      const overVault = compile(vaultOf(wallets.one.pub, oracle.pub, { sealed: 1, debt: CENTS, quote: over }));
+      const overNote = compile(noteOf(wallets.two.pub, oracle.pub, over));
+      const thirdOutputs = [
+        {
+          value: COLLATERAL,
+          script: kaspa.payToScriptHashScript(thirdVault.redeem),
+          covenant: binding(kaspa, sittingVault.covenantId, 0),
+        },
+        {
+          value: CARRIER,
+          script: kaspa.payToScriptHashScript(thirdNote.redeem),
+          covenant: binding(kaspa, sittingVault.covenantId, 1),
+        },
+      ];
+      const overOutputs = [
+        {
+          value: COLLATERAL,
+          script: kaspa.payToScriptHashScript(overVault.redeem),
+          covenant: binding(kaspa, sittingVault.covenantId, 0),
+        },
+        {
+          value: CARRIER,
+          script: kaspa.payToScriptHashScript(overNote.redeem),
+          covenant: binding(kaspa, sittingVault.covenantId, 1),
+        },
+      ];
+      const earlySigs = [
+        {
+          input: 0,
+          built: vaultBuilt,
+          entry: "step",
+          key: null,
+          args: [third, signStep(third, NEXT, sittingVault.covenantId, oracle.priv)],
+        },
+        {
+          input: 1,
+          built: noteBuilt,
+          entry: "stepNote",
+          key: null,
+          args: [third, signStep(third, NEXT, sittingVault.covenantId, oracle.priv)],
+        },
+      ];
+      const priorReuse = tried("position-step-reuse");
+      const priorOver = tried("position-step-over");
+      let early;
+      let tooFar;
+      let waited;
+      if (priorReuse && priorOver) {
+        early = { accepted: false, id: priorReuse.txid, error: "already rejected", skipped: true };
+        tooFar = { accepted: false, id: priorOver.txid, error: "already rejected", skipped: true };
+        say(`reuse skip ${priorReuse.txid}`);
+        say(`over skip ${priorOver.txid}`);
+        waited = { mines: 0, now: await dagOf(rpc) };
+      } else {
+      const feeEarly = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set());
+      early = await submitOnce({
+        label: "position-step-reuse",
+        rows: [sittingVault.row, sittingNote.row, feeEarly],
+        sequences: [0n, MAX_SEQUENCE, MAX_SEQUENCE],
+        lockTime: oldNeed,
+        outputs: thirdOutputs,
+        changeScript: wallets.one.spk,
+        feeKey: wallets.one.key,
+        feeIndex: 2,
+        sigs: earlySigs,
+      });
+      say(`reuse accepted=${early.accepted} ${early.error || early.id}`);
+      if (early.accepted) throw new Error("the first lock moved the second quote");
+      waited = await minePast(rpc, wallets.three.address, newNeed);
+      const againVault = await findRow(rpc, kaspa, vaultBuilt, COLLATERAL);
+      const againNote = await findRow(rpc, kaspa, noteBuilt, CARRIER);
+      if (!againVault || !againNote) throw new Error("position moved during the second wait");
+      const overSigs = [
+        {
+          input: 0,
+          built: vaultBuilt,
+          entry: "step",
+          key: null,
+          args: [over, signStep(over, NEXT, againVault.covenantId, oracle.priv)],
+        },
+        {
+          input: 1,
+          built: noteBuilt,
+          entry: "stepNote",
+          key: null,
+          args: [over, signStep(over, NEXT, againVault.covenantId, oracle.priv)],
+        },
+      ];
+      const feeOver = await pickCoin(rpc, wallets.one, waited.now.virtualDaa, FEE_ROOM, new Set());
+      tooFar = await submitOnce({
+        label: "position-step-over",
+        rows: [againVault.row, againNote.row, feeOver],
+        sequences: [0n, MAX_SEQUENCE, MAX_SEQUENCE],
+        lockTime: newNeed,
+        outputs: overOutputs,
+        changeScript: wallets.one.spk,
+        feeKey: wallets.one.key,
+        feeIndex: 2,
+        sigs: overSigs,
+      });
+      say(`over accepted=${tooFar.accepted} ${tooFar.error || tooFar.id}`);
+      if (tooFar.accepted) throw new Error("a step past four thirds was accepted");
+      }
+      const stepVault = await findRow(rpc, kaspa, vaultBuilt, COLLATERAL);
+      const stepNote = await findRow(rpc, kaspa, noteBuilt, CARRIER);
+      if (!stepVault || !stepNote) throw new Error("position moved before the second step");
+      if (String(stepVault.born) !== String(sittingVault.born)) throw new Error("second birth moved");
+      const stepSigs = [
+        {
+          input: 0,
+          built: vaultBuilt,
+          entry: "step",
+          key: null,
+          args: [third, signStep(third, NEXT, stepVault.covenantId, oracle.priv)],
+        },
+        {
+          input: 1,
+          built: noteBuilt,
+          entry: "stepNote",
+          key: null,
+          args: [third, signStep(third, NEXT, stepVault.covenantId, oracle.priv)],
+        },
+      ];
+      const feeStep = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set());
+      const moved = await submitOnce({
+        label: "position-step-two",
+        rows: [stepVault.row, stepNote.row, feeStep],
+        sequences: [0n, MAX_SEQUENCE, MAX_SEQUENCE],
+        lockTime: newNeed,
+        outputs: thirdOutputs,
+        changeScript: wallets.one.spk,
+        feeKey: wallets.one.key,
+        feeIndex: 2,
+        sigs: stepSigs,
+      });
+      if (!moved.accepted) throw new Error(`second step rejected: ${moved.error}`);
+      mineOne(wallets.three.address);
+      const after = await waitRow(rpc, kaspa, thirdVault, COLLATERAL);
+      const afterNote = await waitRow(rpc, kaspa, thirdNote, CARRIER);
+      if (after.covenantId !== afterNote.covenantId) throw new Error("second step split the covenant id");
+      state.phase = "stepped2";
+      state.second = {
+        txid: moved.id,
+        born: after.born,
+        covenantId: after.covenantId,
+        quote: third,
+        need: newNeed.toString(),
+        mines: waited.mines,
+        pay: pay.toString(),
+        left: left.toString(),
+        reuse: early.id,
+        over: tooFar.id,
+      };
+      saveJson(STATE_FILE, state);
+      journal({
+        label: "position-step-two",
+        txid: moved.id,
+        born: after.born,
+        need: newNeed.toString(),
+        mines: waited.mines,
+        quote: third,
+        covenantId: after.covenantId,
+        reuse: early.id,
+        over: tooFar.id,
+      });
+      say(`second txid=${moved.id} born=${after.born} need=${newNeed} mines=${waited.mines}`);
+    }
+
+    if (state.phase === "stepped" && !COMPOUND) {
       const vaultBuilt = compile(steppedFields);
       const noteBuilt = compile(steppedNote);
       const redeemed = compile(redeemedFields);
       const vault = await findRow(rpc, kaspa, vaultBuilt, COLLATERAL);
       const note = await findRow(rpc, kaspa, noteBuilt, CARRIER);
       if (!vault || !note) throw new Error("stepped position is not spendable");
-      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_FLOOR, new Set());
+      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set());
       const sent = await submit(kaspa, rpc, {
         label: "position-redeem",
         rows: [vault.row, note.row, fee],
@@ -1061,6 +1335,63 @@ async function main() {
         covenantId: left.covenantId,
       });
       say(`redeem txid=${sent.id} pay=${PAY} left=${LEFT} covenant=${left.covenantId}`);
+    }
+
+    if (state.phase === "stepped2") {
+      const third = state.second.quote;
+      const pay = BigInt(state.second.pay);
+      const leftAmount = BigInt(state.second.left);
+      const vaultBuilt = compile(vaultOf(wallets.one.pub, oracle.pub, { sealed: 1, debt: CENTS, quote: third }));
+      const noteBuilt = compile(noteOf(wallets.two.pub, oracle.pub, third));
+      const redeemed = compile(vaultOf(wallets.one.pub, oracle.pub, { sealed: 1, debt: 0, quote: third }));
+      const vault = await findRow(rpc, kaspa, vaultBuilt, COLLATERAL);
+      const note = await findRow(rpc, kaspa, noteBuilt, CARRIER);
+      if (!vault || !note) throw new Error("second position is not spendable");
+      const fee = await pickCoin(rpc, wallets.one, (await dagOf(rpc)).virtualDaa, FEE_ROOM, new Set());
+      const sent = await submit(kaspa, rpc, {
+        label: "position-redeem-two",
+        rows: [vault.row, note.row, fee],
+        sequences: [MAX_SEQUENCE, MAX_SEQUENCE, MAX_SEQUENCE],
+        lockTime: 0,
+        outputs: [
+          {
+            value: leftAmount,
+            script: kaspa.payToScriptHashScript(redeemed.redeem),
+            covenant: binding(kaspa, vault.covenantId),
+          },
+          { value: pay, script: wallets.two.spk },
+          { value: CARRIER, script: wallets.two.spk },
+        ],
+        changeScript: wallets.one.spk,
+        feeKey: wallets.one.key,
+        feeIndex: 2,
+        sigs: [
+          { input: 0, built: vaultBuilt, entry: "vaultRedeem", key: null, args: [] },
+          { input: 1, built: noteBuilt, entry: "noteRedeem", key: wallets.two.key, args: [OWNER] },
+        ],
+      });
+      if (!sent.accepted) throw new Error(`second redeem rejected: ${sent.error}`);
+      mineOne(wallets.three.address);
+      const left = await waitRow(rpc, kaspa, redeemed, leftAmount);
+      state.phase = "redeemed";
+      state.redeem = {
+        txid: sent.id,
+        pay: pay.toString(),
+        left: leftAmount.toString(),
+        covenantId: left.covenantId,
+        born: left.born,
+        quote: third,
+      };
+      saveJson(STATE_FILE, state);
+      journal({
+        label: "position-redeem-two",
+        txid: sent.id,
+        pay: pay.toString(),
+        left: leftAmount.toString(),
+        quote: third,
+        covenantId: left.covenantId,
+      });
+      say(`second redeem txid=${sent.id} pay=${pay} left=${leftAmount} covenant=${left.covenantId}`);
     }
   } finally {
     await rpc.disconnect();

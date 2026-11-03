@@ -53,6 +53,22 @@ test("the key alone does not store the next quote", () => {
   assert.equal(quoteWrite(20, false, true, true), true);
 });
 
+test("a second step is capped against the new quote and waits from the new birth", () => {
+  const third = 533_333_333;
+  assert.equal(quoteStepAllows(400_000_000, third), true);
+  assert.equal(quoteStepAllows(400_000_000, third + 1), false);
+  assert.equal(quoteStepAllows(400_000_000, 600_000_000), false);
+  assert.equal(quoteStepAllows(QUOTE, third), false);
+  const first = stepAllows(1_255, 8, 1_262, 1_263, false, QUOTE, 400_000_000);
+  assert.equal(first.accepts, true);
+  const reused = stepAllows(1_264, 8, 1_262, 1_272, false, 400_000_000, third);
+  assert.equal(reused.script, false);
+  assert.equal(reused.accepts, false);
+  const second = stepAllows(1_264, 8, 1_271, 1_272, false, 400_000_000, third);
+  assert.equal(second.accepts, true);
+  assert.equal(second.need, 1_271);
+});
+
 test("the position prices a window only when the attack is half of hashrate", () => {
   assert.equal(minAttackerBps(5_000), 2_500);
   assert.equal(positionWindow(5_000), false);
