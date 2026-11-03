@@ -25,6 +25,14 @@ import {
   windowHasPrice,
   minAttackerBps,
   cappedFall,
+  daaSpan,
+  signerWindowAllows,
+  headerTimestampAllowed,
+  daaWaitAllows,
+  anchoredStep,
+  cappedQuote,
+  linearRemainingBps,
+  ageAllows,
 } from "./issues.mjs";
 
 test("one dollar of quote is the rounded sompi, and the ratio rounds up", () => {
@@ -274,4 +282,85 @@ test("a fee beside an unsplit subsidy does not enter a lock", () => {
   assert.equal(paid.diverted, 0);
   assert.equal(paid.face, 0);
   assert.equal(paid.free, 4_400_000_000 + 5_222_300);
+});
+
+test("the five named durations are DAA counts at the network block rate", () => {
+  assert.equal(daaSpan(10 * 60, 10), 6_000);
+  assert.equal(daaSpan(30 * 60, 10), 18_000);
+  assert.equal(daaSpan(60 * 60, 10), 36_000);
+  assert.equal(daaSpan(30 * 24 * 60 * 60, 10), 25_920_000);
+  assert.equal(daaSpan(60 * 60, 1), 3_600);
+});
+
+test("the signer window accepts a lock time the block has already passed", () => {
+  const notBefore = 1_793_652_874_881;
+  const lockTime = 1_793_652_889_881;
+  const expiry = 1_793_652_919_881;
+  const blockTime = 1_793_652_922_396;
+  assert.equal(signerWindowAllows(lockTime, notBefore, expiry), true);
+  assert.ok(blockTime > expiry);
+});
+
+test("a header may sit hours above a stuck median and still be a legal timestamp", () => {
+  const header = 1_793_652_922_396;
+  const median = 1_793_578_216_327;
+  const gap = header - median;
+  assert.equal(gap, 74_706_069);
+  assert.ok(gap > 30 * 60 * 1000);
+  assert.ok(gap < 30 * 24 * 60 * 60 * 1000);
+  assert.equal(headerTimestampAllowed(header, median, header, 132_000), true);
+  assert.equal(headerTimestampAllowed(median, median, header, 132_000), false);
+  assert.equal(headerTimestampAllowed(header + 132_001, median, header, 132_000), false);
+});
+
+test("a DAA wait lands on the block after born + wait - 1, and a max sequence does not", () => {
+  const early = daaWaitAllows(100, 4, 103, 103, false);
+  assert.equal(early.need, 103);
+  assert.equal(early.script, true);
+  assert.equal(early.consensus, false);
+  assert.equal(early.accepts, false);
+  const landed = daaWaitAllows(100, 4, 103, 104, false);
+  assert.equal(landed.accepts, true);
+  const skipped = daaWaitAllows(100, 4, 103, 100, true);
+  assert.equal(skipped.accepts, false);
+  assert.equal(skipped.script, false);
+  assert.equal(skipped.consensus, true);
+  const wrong = daaWaitAllows(100, 4, 102, 104, false);
+  assert.equal(wrong.script, false);
+  assert.equal(wrong.accepts, false);
+});
+
+test("reapplying the hourly cap every ten minutes breaks the hour", () => {
+  const oneHour = cappedFall(1, 2_500);
+  const sixWindows = cappedFall(6, 2_500);
+  assert.equal(oneHour.num * 10_000n, oneHour.den * 7_500n);
+  assert.ok(sixWindows.num * 10_000n < sixWindows.den * 7_500n);
+  assert.equal(anchoredStep(10_000, 2_500, "down"), 7_500);
+  assert.equal(anchoredStep(10_000, 1_000, "up"), 11_000);
+});
+
+test("the anchor holds the mint and the liquidation price to one step an hour", () => {
+  assert.equal(cappedQuote(10_000, 0, 36_000, 6_000, "mint"), 6_000);
+  assert.equal(cappedQuote(10_000, 0, 36_000, 6_000, "liquidation"), 10_000);
+  assert.equal(cappedQuote(10_000, 36_000, 36_000, 6_000, "liquidation"), 7_500);
+  assert.equal(cappedQuote(10_000, 36_000, 36_000, 12_000, "mint"), 11_000);
+  assert.equal(cappedQuote(10_000, 0, 36_000, 12_000, "mint"), 10_000);
+  assert.equal(linearRemainingBps(2, 2_500), 5_000);
+  assert.equal(linearRemainingBps(3, 2_500), 2_500);
+});
+
+test("the halt and the settlement use the same age", () => {
+  const halt = daaSpan(30 * 60, 10);
+  const settle = daaSpan(30 * 24 * 60 * 60, 10);
+  assert.equal(ageAllows(halt - 1, halt, settle, "redeem"), true);
+  assert.equal(ageAllows(halt, halt, settle, "redeem"), false);
+  assert.equal(ageAllows(halt, halt, settle, "add"), true);
+  assert.equal(ageAllows(halt, halt, settle, "mint"), false);
+  assert.equal(ageAllows(settle - 1, halt, settle, "settle"), false);
+  assert.equal(ageAllows(settle, halt, settle, "settle"), true);
+  assert.equal(ageAllows(settle, halt, settle, "redeem"), true);
+  assert.equal(ageAllows(settle, halt, settle, "withdraw"), true);
+  assert.equal(ageAllows(settle, halt, settle, "mint"), false);
+  assert.equal(ageAllows(settle, halt, settle, "liquidate"), false);
+  assert.equal(ageAllows(0, halt, settle, "settle"), false);
 });

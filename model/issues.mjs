@@ -200,3 +200,89 @@ export function cappedFall(hours, fallPerHourBps) {
   }
   return { num, den };
 }
+
+// The five durations named on the Kaspa Dollar pages, counted in DAA.
+// The page does not publish these products. bps is the network's, not a hidden constant.
+export function daaSpan(seconds, bps) {
+  if (!Number.isInteger(seconds) || seconds < 0) throw new Error("bad seconds");
+  if (!Number.isInteger(bps) || bps <= 0) throw new Error("bad bps");
+  return seconds * bps;
+}
+
+// peg.sil compares the signer's lock time with the signed window. The block time is not an input.
+export function signerWindowAllows(lockTime, notBefore, expiry) {
+  if (!Number.isInteger(lockTime) || !Number.isInteger(notBefore) || !Number.isInteger(expiry)) {
+    throw new Error("bad window");
+  }
+  if (expiry <= notBefore) throw new Error("bad window");
+  return lockTime >= notBefore && lockTime <= expiry;
+}
+
+// A header timestamp must be newer than the past median and at most toleranceMs ahead of the node.
+export function headerTimestampAllowed(header, median, localNow, toleranceMs) {
+  if (header <= median) return false;
+  return header <= localNow + toleranceMs;
+}
+
+// Consensus includes a DAA lock only when lockTime < blockDaa, unless every sequence is max.
+// The script asks for born + wait - 1, so the including block is at least `wait` DAA later.
+// A max sequence is the bypass. SilverScript 0.1.0 has no CheckLockTimeVerify, so the
+// contract compares the 8 sequence bytes instead.
+export function daaWaitAllows(born, wait, lockTime, blockDaa, sequenceMax) {
+  if (!Number.isInteger(born) || !Number.isInteger(wait) || wait < 1) throw new Error("bad wait");
+  if (!Number.isInteger(lockTime) || !Number.isInteger(blockDaa)) throw new Error("bad wait");
+  const threshold = 500_000_000_000;
+  const need = born + wait - 1;
+  const script = lockTime === need && lockTime < threshold && sequenceMax === false;
+  const consensus = sequenceMax === true || lockTime < blockDaa;
+  return { need, script, consensus, accepts: script && consensus };
+}
+
+// One multiplicative step. Down keeps (10000 - capBps) / 10000. Up allows (10000 + capBps) / 10000.
+export function anchoredStep(anchor, capBps, direction) {
+  if (!Number.isInteger(anchor) || anchor <= 0) throw new Error("bad anchor");
+  if (!Number.isInteger(capBps) || capBps < 0 || capBps >= 10_000) throw new Error("bad cap");
+  if (direction === "down") return Math.floor((anchor * (10_000 - capBps)) / 10_000);
+  if (direction === "up") return Math.floor((anchor * (10_000 + capBps)) / 10_000);
+  throw new Error("bad direction");
+}
+
+// Until an hour of DAA has passed, the anchor does not move.
+// After that, one step. Mint is then not above the median. Liquidation is not below it.
+export function cappedQuote(anchor, ageDaa, hourDaa, median, side) {
+  if (!Number.isInteger(ageDaa) || !Number.isInteger(hourDaa) || hourDaa < 1) throw new Error("bad hour");
+  if (!Number.isInteger(median) || median <= 0) throw new Error("bad median");
+  const aged = ageDaa >= hourDaa;
+  if (side === "mint") {
+    const ceiling = aged ? anchoredStep(anchor, 1_000, "up") : anchor;
+    return median < ceiling ? median : ceiling;
+  }
+  if (side === "liquidation") {
+    const floor = aged ? anchoredStep(anchor, 2_500, "down") : anchor;
+    return median > floor ? median : floor;
+  }
+  throw new Error("bad side");
+}
+
+// Remaining price, in bps of the start, after a linear drop of pointsBps each hour.
+export function linearRemainingBps(hours, pointsBps) {
+  if (!Number.isInteger(hours) || hours < 0) throw new Error("bad hours");
+  if (!Number.isInteger(pointsBps) || pointsBps < 0) throw new Error("bad points");
+  const lost = hours * pointsBps;
+  return lost >= 10_000 ? 0 : 10_000 - lost;
+}
+
+// What a vault may do when the last accepted price is ageDaa old.
+// Before the halt, every action except settlement. During the halt, only add, repay, and close.
+// At settlement, mint and liquidate stay stopped, and redeem returns.
+export function ageAllows(ageDaa, haltDaa, settleDaa, action) {
+  if (!Number.isInteger(ageDaa) || ageDaa < 0) throw new Error("bad age");
+  if (!Number.isInteger(haltDaa) || !Number.isInteger(settleDaa) || haltDaa < 1 || settleDaa <= haltDaa) {
+    throw new Error("bad age");
+  }
+  const known = ["mint", "withdraw", "liquidate", "redeem", "add", "repay", "close", "settle"];
+  if (!known.includes(action)) throw new Error("bad action");
+  if (ageDaa < haltDaa) return action !== "settle";
+  if (ageDaa < settleDaa) return action === "add" || action === "repay" || action === "close";
+  return action !== "mint" && action !== "liquidate";
+}

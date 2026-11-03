@@ -1,0 +1,59 @@
+pragma silverscript ^0.1.0;
+
+// A wait measured in DAA. The Kaspa Dollar pages name minutes, hours, and days.
+// They do not say which clock. This contract uses the DAA score.
+// Consensus includes a DAA lock time only when it is strictly below the block
+// DAA, and only when some input sequence is not the maximum.
+// The script asks for born + wait - 1 and rejects the maximum sequence.
+// Consensus then waits until the block DAA is strictly above that lock time.
+// SilverScript 0.1.0 has no CheckLockTimeVerify, so the sequence is compared
+// as 8 raw bytes. wait is a constructor argument so a test can use a few DAA.
+// 6000, 18000, 36000, and 25920000 are the 10-minute, 30-minute, 1-hour, and
+// 30-day products at 10 blocks per second. The page does not publish them.
+// This one entry was rejected by the devnet node. The inline form was rejected.
+// This function form was rejected too. contracts/clock-probe.sil is the form
+// whose full entry the node accepted. The rejection text does not name the line.
+
+contract Clock(byte[32] initOwner, int initWait) {
+    int constant THRESHOLD = 500000000000;
+    byte[32] owner = initOwner;
+    int wait = initWait;
+
+    function successor(int outIdx) {
+        require(wait >= 1);
+        validateOutputState(outIdx, State {
+            owner: owner,
+            wait: wait
+        });
+    }
+
+    function shape() {
+        require(this.activeInputIndex == 0);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        byte[32] id = OpInputCovenantId(0);
+        require(tx.version >= 1);
+        require(OpCovInputCount(id) == 1);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovOutputCount(id) == 1);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpOutputCovenantId(0) == id);
+        require(OpAuthOutputCount(0) == 1);
+        require(OpAuthOutputIdx(0, 0) == 0);
+    }
+
+    function clock() {
+        int born = OpTxInputDaaScore(0);
+        int need = born + wait - 1;
+        require(need < THRESHOLD);
+        require(OpTxLockTime() == need);
+        byte[8] skipped = byte[8](0xffffffffffffffff);
+        require(OpTxInputSeq(0) != skipped);
+    }
+
+    entry prove(sig ownerSig) {
+        shape();
+        clock();
+        successor(0);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+}

@@ -1,0 +1,72 @@
+pragma silverscript ^0.1.0;
+
+// Isolation for the clock spend. The node reports one generic verification
+// failure. Each entry adds one piece. A later entry is tried only after the
+// stricter one is rejected, so the first one that lands names the piece.
+
+contract Probe(byte[32] initOwner, int initWait) {
+    int constant THRESHOLD = 500000000000;
+    byte[32] owner = initOwner;
+    int wait = initWait;
+
+    function successor(int outIdx) {
+        require(wait >= 1);
+        validateOutputState(outIdx, State {
+            owner: owner,
+            wait: wait
+        });
+    }
+
+    function shape() {
+        require(this.activeInputIndex == 0);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        byte[32] id = OpInputCovenantId(0);
+        require(tx.version >= 1);
+        require(OpCovInputCount(id) == 1);
+        require(OpCovInputIdx(id, 0) == 0);
+        require(OpCovOutputCount(id) == 1);
+        require(OpCovOutputIdx(id, 0) == 0);
+        require(OpOutputCovenantId(0) == id);
+        require(OpAuthOutputCount(0) == 1);
+        require(OpAuthOutputIdx(0, 0) == 0);
+    }
+
+    function clock() {
+        int born = OpTxInputDaaScore(0);
+        int need = born + wait - 1;
+        require(need < THRESHOLD);
+        require(OpTxLockTime() == need);
+        byte[8] skipped = byte[8](0xffffffffffffffff);
+        require(OpTxInputSeq(0) != skipped);
+    }
+
+    entry touch() {
+        require(this.activeInputIndex == 0);
+        require(tx.outputs[0].value == tx.inputs[0].value);
+        successor(0);
+    }
+
+    entry open() {
+        shape();
+        successor(0);
+    }
+
+    entry nosig() {
+        shape();
+        clock();
+        successor(0);
+    }
+
+    entry nodaa(sig ownerSig) {
+        shape();
+        successor(0);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+
+    entry full(sig ownerSig) {
+        shape();
+        clock();
+        successor(0);
+        require(checkSig(ownerSig, pubkey(owner)));
+    }
+}
