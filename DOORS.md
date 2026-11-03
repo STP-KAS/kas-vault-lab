@@ -8,7 +8,7 @@ The word used below is Kaspa. A unit does not have to be a dollar. A dollar is o
 
 Ordering is who may include a payment in a block. On Kaspa that is any miner. The coinbase pays them sompi. There is no sequencer company in that path. A rollup that collects payments and later posts a digest has a sequencer again, even if the digest lands on Kaspa. The miners then secure a receipt of someone else's order. They do not order the payments.
 
-The door is who may create the unit, destroy it, freeze it, or name its price. That power is not mining. A hashrate majority that votes the price can mint an undercollateralized note inside valid blocks. A hashrate majority that is the only minter is a set of pools. Both were refused in `STUDY.md`.
+The door is who may create the unit, destroy it, freeze it, or name its price. That power is not mining. A hashrate majority that votes the price can mint an undercollateralized note inside valid blocks. A hashrate majority that is the only minter is a set of pools. Both were refused in `STUDY.md`. Kaspa Dollar's published participation rule, read on 3 Nov 2026, is finer than that majority sentence. The reading is at the end of this file.
 
 Applications do not come to Kaspa because the chain becomes a sequencer. It already orders transactions. They come when the unit they invoice in can move as a Kaspa transaction. The unit is the reason to settle here. The miners are already the ordering.
 

@@ -242,3 +242,39 @@ The section above stays. This one is the five times that section left as sentenc
 **Fact.** `contracts/clock-probe.sil` is the same checks split into `full`, `nosig`, `nodaa`, `open`, and `touch`. The strictest entry is `full`. It was accepted first. Fund `b7eee4364e47ffb9fdda52c7778856f8e8bd935e69e06813c54c2af7eab8680e`, born 1233, lock 1240, covenant `54efc6257af84b1863bf93c82bf90f6fe08bf1b039cd73e3a0a8684f37706229`, value 20000000 sompi. Spend `937a4b4f31cbc0b1d1cce8a4c247570079a8af3299b4ab4864a4421ee4700ece` was included at block DAA 1242. 1242 is above 1240, and 1242 is at least 1233 + 8. The successor's birth is that block DAA, so its lock is 1249. Virtual DAA was already 1251 when the second spend was submitted, so no further wait was required. Spend `27035400fa7a1061ef81f251d38014de5ffe72d1a58760f36d09e975e35e6f6a` was included at block DAA 1252. The fee was 2000000 sompi. The first transaction was not submitted again. The covenant id did not change. `node --test model/issues.test.mjs model/doors.test.mjs` passed 41 tests.
 
 **Reasoning.** What the page leaves open is the clock, the compounding, and the anchor. What this desk can enforce in a plain script is a DAA wait, with the off-by-one the consensus comparison requires, and with the maximum sequence refused in the script because SilverScript 0.1.0 does not call `CheckLockTimeVerify`. The hour rule that matches "takes hours" and "at most 25 percent an hour" is one multiplicative step against the price from one DAA hour earlier, then the median clamp. The probe spent that wait twice. The one-entry form did not. Their miner median was not run, because this desk is the only miner. Their covenants stay unpublished. The four constraints are where the earlier section left them. This is a study. We are not claiming a stablecoin.
+
+## Pushback, kept on 3 Nov 2026
+
+These sentences were on the landing page. They stay here so a shorter page does not drop them. A settled line is a correction that later measurements already answered. An open line is still a live limit. The landing page keeps the open lines.
+
+**Settled.** The devnet face is not a stablecoin. The price in the script is the constant 1. The node refused to spend the lock. The error was `stack contains 4 unexpected items`.
+
+**Settled.** Half the subsidy is not "a little." It was chosen so both lines moved.
+
+**Open.** "As secure as Kaspa" fits a Kaspa UTXO. It does not fit a price. Bitcoin's record from genesis on 3 Jan 2009 to 1 Nov 2026 is 17 years and 302 days, 6511 days. From the white paper on 31 Oct 2008 it is 18 years and 1 day, 6575 days. Those years did not put a dollar price into the protocol. In August 2010 an overflow was removed by reorganizing onto a patched binary. The years are an operating record.
+
+**Settled.** A pot of 20,000 keys is not a safe place. The model says 19,999 signatures do not move it. It was not built.
+
+**Settled.** Miners declining to dump a note because dumping would hurt them is a wish. It is not a rule. The chain has no person to cap. A pool is one script.
+
+**Settled.** An earlier note said another sample of the same coinbase would only repeat the haircut. Maturity and a spend have been tried. The free half spends. The locked half does not.
+
+**Settled.** The balance reader dropped one face after the free output of that same coinbase was spent. The reader only counts a coinbase while an address output of it remains. The second rejection from the node is the evidence that the lock was still there.
+
+**Settled.** The gap between 1200 success reports and 1171 new blocks was called unexplained. The field printed as `blocks` is `estimate_block_count`, which is virtual DAA minus the retention root. It does not include non-DAA blocks. The 1 Nov log accepted 1226 submits. The selected chain at virtual DAA 1197 is 1197 of those, plus genesis in the block walk. The other 29 did not become an extra face. The accepted locks are one per paid block, each exactly half of one subsidy.
+
+**Settled.** Five percent was run. The smaller slice still pays the miner less than the full subsidy. `survivesGap` does not take the slice as an argument. A higher collateral ratio survives a deeper drop, and an immediate redeem then returns less KAS. A smaller slice does not cap a large miner's share of the face.
+
+**Settled as a missing id, open as a price.** "`peg.sil` has no transaction id" was true through the five percent run. The redeem ids are in `RESULTS.md`. A confirmed redeem is a covenant UTXO on this private devnet. It is not a market price. The same lab key then stored 200000000 in place of 100000000, and a 50-cent note paid the same 1 KAS the 100-cent note had paid.
+
+**Settled.** The first stale mint was rejected as not finalized. Sequence 0 and a lock time near the wall clock were ahead of this devnet's median time. After every input sequence was the maximum, the script rejected the expired window. That is not a test of mining a still-valid signature later.
+
+**Open.** That later test has been run. Mint `9eb4a0d71e0b4d3aba458d05475a169f80183a8ab24e2af8443e05b04694c89f` was signed while its lock time was inside the window, held until the wall clock was past the expiry, and accepted. The including block's timestamp is after the expiry. The hope that the node would refuse a late but still-signed window was wrong for this script.
+
+**Open on covenant A. Closed on the 3 Nov script while a note is outstanding.** A note in the holder's hands was treated as safe from a later quote. That was wrong for the 2 Nov script. `refreshVault` and `refreshNote` take the oracle signature and no holder signature. The 20-cent note was moved to a price the 0.75 KAS vault could not pay, then to a price that paid 0.4 KAS. A different key was rejected on the same shape. Covenant A still commits that source.
+
+**Open when debt is 0.** The 3 Nov script rejected the same refresh while 20 cents were outstanding, and the redeem paid the mint-time sompi. `refreshSolo` `5ad0df61aacbe5bcae6c98c6cab14f86154e57cd41e6e6d1d95849752eeac758` then stored 200000000 with nothing outstanding. Mint `88461152f2a0d6762d775f5a23d8b7fa35f5d38fb67b498e72b3200e14b0f835` created 10 cents. Redeem `02275ccc1661a117114ea6be37479a7dda620a9c043eb382340b1371b68bcc4b` paid 20000000 sompi. Half the cents, the same kas.
+
+**Open as a vote, settled as a wording.** An earlier sentence said a hashrate majority that votes a price can undercollateralize a note. Kaspa Dollar's published rule is finer. A window has a price when at least half of its blocks voted. Moving the median takes at least as many votes as the honest voters. When every block votes, that is half the hashrate. When exactly half the blocks vote, half of those votes is a quarter of the hashrate. Their heading calls that floor "25% network participation." The votes inside a valid window are at least half the blocks. The same page says, in one bullet, that the liquidation price decreases with no cap, and says in the chart, the four conditions, and the fall-limit section that it falls by at most 25 percent an hour. The argument that a false low price takes hours needs the cap. Both sentences are on the page.
+
+**Open.** The five times on that page were ready to be treated as a mechanism. The page names the intervals and leaves the clock, the compounding, and the anchor blank. Counting them in DAA, holding each cap to one step against the price of one hour earlier, and keeping the fall cap, is this study's reading. The page has not chosen. Applying the 25 percent again inside every ten-minute window drops about 82 percent in one hour, which fails their own "at most 25 percent an hour." The uncapped bullet does a 60 percent drop in one window, which fails their sentence that a false low price takes hours.

@@ -4,7 +4,7 @@ tUSD-TEST is a test token on TN10. It has no issuer reserve, no dollar account, 
 
 ## Oracle
 
-The price is a signature from a key this lab generated. The node checks the signature and the lock-time window. It does not check a market. A signer who publishes a low price can make a healthy vault liquidatable. A signer who publishes a high price can block a liquidation that a real market would allow. There is no committee, no median, and no delay beyond the one-hour window.
+The price is a signature from a key this lab generated. The node checks the signature and the lock-time window. It does not check a market. A signer who publishes a low price can make a healthy vault liquidatable. A signer who publishes a high price can block a liquidation that a real market would allow. There is no committee, no median, and no delay beyond the one-hour window. The miner median read on 3 Nov 2026 is Kaspa Dollar's page, in `STUDY.md`. It is not this key.
 
 ## The stale-price hole
 

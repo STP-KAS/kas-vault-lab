@@ -1,8 +1,6 @@
 # Results
 
-No TN10 transaction was broadcast. There is no vault txid, no mint txid, no repay txid, no withdraw txid, no liquidation txid, and no rejection from a node. The driver stopped while asking for test coins.
-
-tUSD-TEST was not created on chain. It is not a stablecoin, and the script is not a conforming KCC-20. `DESIGN.md` states the field order and the missing borrow schemes.
+The 27 Oct 2026 driver stopped while asking for test coins. That day has no vault txid. Later headings in this file record the 1 Nov public sample, the private devnets, the `peg.sil` redeems, and the DAA wait. tUSD-TEST was not created on chain. It is not a stablecoin, and the script is not a conforming KCC-20. `DESIGN.md` states the field order and the missing borrow schemes.
 
 ## What was asked
 
@@ -52,6 +50,8 @@ Three vault tests expect the script to accept: `deposit_adds_collateral`, `repay
 ## What is absent
 
 There is no expected-versus-observed line for a broadcast, because nothing was submitted. A later run can resume from the same test key once a faucet pays it. Until a node returns a txid, this file must not grow one.
+
+That paragraph is the 27 Oct state. The headings below it name transaction ids from the private devnet and from the 1 Nov TN10 sample.
 
 ## Checked again on 27 Oct 2026
 
