@@ -133,3 +133,70 @@ export function potMoves(signatures, required) {
   if (required <= 0 || signatures < 0) throw new Error("bad pot");
   return signatures >= required;
 }
+
+// Fall, in basis points, from an open collateral ratio down to 100% of the debt.
+// 250% open is 6000 bps, which is 1 - 1/2.5. This is not a price.
+export function fallToUnbackedBps(openBps) {
+  if (!Number.isInteger(openBps) || openBps <= 10_000) throw new Error("bad open ratio");
+  return 10_000 - Math.floor((10_000 * 10_000) / openBps);
+}
+
+// Collateral ratio after the price falls by fallBps, starting from openBps.
+export function ratioAfterFall(openBps, fallBps) {
+  if (!Number.isInteger(openBps) || !Number.isInteger(fallBps)) throw new Error("bad fall");
+  if (openBps <= 0 || fallBps < 0 || fallBps > 10_000) throw new Error("bad fall");
+  return Math.floor((openBps * (10_000 - fallBps)) / 10_000);
+}
+
+// Exact repay fraction that restores targetBps. bonusBps is the extra collateral
+// taken on the repaid debt. num/den is the repaid debt in the same units as value and debt.
+export function partialRepay(value, debt, targetBps, bonusBps) {
+  if (!Number.isInteger(value) || !Number.isInteger(debt)) throw new Error("bad vault");
+  if (debt <= 0 || value < 0 || targetBps <= 10_000) throw new Error("bad vault");
+  const den = targetBps - 10_000 - bonusBps;
+  if (den <= 0) throw new Error("bad penalty");
+  const num = targetBps * debt - 10_000 * value;
+  if (num <= 0) return { num: 0, den, seizedNum: 0 };
+  const seizedNum = num * (10_000 + bonusBps);
+  const seizedDen = den * 10_000;
+  return { num, den, seizedNum, seizedDen };
+}
+
+// An attacker moves a median only with at least as many votes as the honest voters.
+export function votesMoveMedian(attacker, honest) {
+  if (attacker < 0 || honest < 0 || attacker + honest === 0) throw new Error("bad votes");
+  return attacker >= honest;
+}
+
+// A window prices only when at least half its blocks carry a vote.
+export function windowHasPrice(votingBlocks, blocks) {
+  if (!Number.isInteger(blocks) || blocks <= 0) throw new Error("bad window");
+  if (!Number.isInteger(votingBlocks) || votingBlocks < 0 || votingBlocks > blocks) throw new Error("bad window");
+  return votingBlocks * 2 >= blocks;
+}
+
+// Attacker hashrate, in bps of the network, needed to be half the votes.
+// A participation below 5000 bps has no price, so the attacker share is null.
+export function minAttackerBps(participationBps) {
+  if (!Number.isInteger(participationBps) || participationBps < 0 || participationBps > 10_000) {
+    throw new Error("bad participation");
+  }
+  if (participationBps < 5_000) return null;
+  return Math.floor(participationBps / 2);
+}
+
+// Remaining price after `hours` of a compound per-hour fall, as a reduced fraction.
+export function cappedFall(hours, fallPerHourBps) {
+  if (!Number.isInteger(hours) || hours < 0) throw new Error("bad hours");
+  if (!Number.isInteger(fallPerHourBps) || fallPerHourBps < 0 || fallPerHourBps >= 10_000) {
+    throw new Error("bad cap");
+  }
+  let num = 1n;
+  let den = 1n;
+  const keep = BigInt(10_000 - fallPerHourBps);
+  for (let i = 0; i < hours; i += 1) {
+    num *= keep;
+    den *= 10_000n;
+  }
+  return { num, den };
+}

@@ -18,6 +18,13 @@ import {
   supplyOf,
   survivesGap,
   utcDays,
+  fallToUnbackedBps,
+  ratioAfterFall,
+  partialRepay,
+  votesMoveMedian,
+  windowHasPrice,
+  minAttackerBps,
+  cappedFall,
 } from "./issues.mjs";
 
 test("one dollar of quote is the rounded sompi, and the ratio rounds up", () => {
@@ -200,4 +207,71 @@ test("the face can hit zero while the subsidy still pays, and the diverted sompi
   assert.equal(splitReward(2, 0, 5_000, 1, 15_000).face, 0);
   assert.equal(splitReward(3, 0, 5_000, 1, 15_000).face, 1);
   assert.equal(splitReward(0, 0, 500, 1, 15_000).face, 0);
+});
+
+test("a 250 percent open falls 60 percent before the debt is unbacked", () => {
+  assert.equal(fallToUnbackedBps(25_000), 6_000);
+  assert.equal(fallToUnbackedBps(20_000), 5_000);
+  assert.equal(ratioAfterFall(25_000, 2_000), 20_000);
+  assert.equal(ratioAfterFall(25_000, 6_000), 10_000);
+  assert.equal(ratioAfterFall(25_000, 2_500), 18_750);
+});
+
+test("the published liquidation example is a 5 percent penalty rounded to the dollar", () => {
+  const value = 27_450;
+  const debt = 14_640;
+  assert.equal(Math.floor((36_600 * 75) / 100), value);
+  assert.equal(Math.floor((value * 10_000) / debt), 18_750);
+  const repay = partialRepay(value, debt, 20_000, 500);
+  assert.equal(repay.num, 18_300_000);
+  assert.equal(repay.den, 9_500);
+  assert.equal(repay.num / repay.den, 1_926.3157894736842);
+  assert.equal(repay.seizedNum, 192_150_000_000);
+  assert.equal(repay.seizedDen, 95_000_000);
+  const seized = repay.seizedNum / repay.seizedDen;
+  assert.ok(seized > 2_022 && seized < 2_023);
+  const pageLeft = value - 2_023;
+  const pageDebt = debt - 1_926;
+  assert.equal(pageLeft, 25_427);
+  assert.equal(pageDebt, 12_714);
+  assert.ok(pageLeft * 10_000 - pageDebt * 20_000 < pageDebt);
+  assert.equal(2_023 - 1_926, 97);
+});
+
+test("half the votes moves the median, and a thin window lowers the hashrate", () => {
+  assert.equal(votesMoveMedian(40, 60), false);
+  assert.equal(votesMoveMedian(60, 40), true);
+  assert.equal(votesMoveMedian(50, 50), true);
+  assert.equal(windowHasPrice(18, 20), true);
+  assert.equal(windowHasPrice(11, 20), true);
+  assert.equal(windowHasPrice(10, 20), true);
+  assert.equal(windowHasPrice(8, 20), false);
+  assert.equal(minAttackerBps(5_000), 2_500);
+  assert.equal(minAttackerBps(9_000), 4_500);
+  assert.equal(minAttackerBps(10_000), 5_000);
+  assert.equal(minAttackerBps(4_000), null);
+});
+
+test("a 25 percent hourly cap takes four hours to fall 60 percent", () => {
+  const three = cappedFall(3, 2_500);
+  const four = cappedFall(4, 2_500);
+  assert.ok(three.num * 10_000n > three.den * 4_000n);
+  assert.ok(four.num * 10_000n < four.den * 4_000n);
+  assert.equal(10 * 60 * 10, 6_000);
+});
+
+test("an equal redeem raises a backed vault and lowers an unbacked one", () => {
+  const backedBefore = 250 * 99;
+  const backedAfter = 249 * 100;
+  assert.ok(backedAfter > backedBefore);
+  const shortBefore = 80 * 99;
+  const shortAfter = 79 * 100;
+  assert.ok(shortAfter < shortBefore);
+});
+
+test("a fee beside an unsplit subsidy does not enter a lock", () => {
+  const paid = splitReward(4_400_000_000, 5_222_300, 0, 1, 15_000);
+  assert.equal(paid.diverted, 0);
+  assert.equal(paid.face, 0);
+  assert.equal(paid.free, 4_400_000_000 + 5_222_300);
 });

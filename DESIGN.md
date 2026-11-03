@@ -132,3 +132,5 @@ Positive mint, seal, withdraw, and liquidate still need a real transaction signa
 **Fact.** The same morning `refreshSolo` on that new vault stored 200000000 while debt was 0. The entry still has no owner signature. The following 10-cent mint and redeem used that stored quote. The ids are in `RESULTS.md`.
 
 **Fact.** A local `silverc` of `peg.sil` with `contracts/peg.args.json` wrote `compiler_version` `0.1.0` on 1 Nov 2026. The artifact is gitignored. `cli-debugger` was not on this desk for that run, so `peg.sil` has no debugger count next to the 15 vault cases. `node --test model/issues.test.mjs` is the run that was executed. It checks the integers and the DAG pictures. It does not execute the script.
+
+**Fact.** On 3 Nov 2026 `peg.sil` was not edited to the 250 percent mint line or the 200 percent liquidation line published that day on the Kaspa Dollar pages. No liquidation entry was added. Their covenants were not on the site. The model gained the integer checks named in `STUDY.md`. The script is the same script the morning's vault committed.
