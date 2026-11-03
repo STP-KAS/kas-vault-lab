@@ -6,6 +6,7 @@
 // --live mints a note and refreshes its price without the holder's signature.
 // That path compiles contracts/peg-2026-11-02.sil, the script covenant A committed.
 // --held compiles contracts/peg.sil on a new vault. An outstanding note keeps its quote.
+// --next, after that redeem, lets the key price the following note and reads the child coinbase.
 
 import { createRequire } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
@@ -73,6 +74,14 @@ const HELD_PAY = 20_000_000n;
 const HELD_LEFT = 80_000_000n;
 const HELD_NEED = 40_000_000n;
 const HELD_FEE = 40_000_000n;
+const NEXT_CENTS = 10;
+const NEXT_PRICE = 200_000_000;
+const NEXT_PAY = 20_000_000n;
+const NEXT_LEFT = 60_000_000n;
+const NEXT_NEED = 40_000_000n;
+const BLOCK_SUBSIDY = 4_400_000_000n;
+const BLOCK_FREE = 2_200_000_000n;
+const BLOCK_LOCK = 2_200_000_000n;
 const RECORDED_COVENANTS = new Set([
   "e40a6989ec65243ee67361d334c7131776f1cea34f3913edf3d76bb74d62f44a",
   "37419615c748e6d670d1790586f7b80c7000ed110b7b7cb01f7270c89c192cf3",
@@ -80,7 +89,17 @@ const RECORDED_COVENANTS = new Set([
 const ZERO = "00".repeat(32);
 const LOCK_TIME_THRESHOLD = 500_000_000_000;
 
-const HELD_PHASES = ["start", "heldOpened", "heldSealed", "heldMinted", "heldRejected", "heldRedeemed"];
+const HELD_PHASES = [
+  "start",
+  "heldOpened",
+  "heldSealed",
+  "heldMinted",
+  "heldRejected",
+  "heldRedeemed",
+  "nextRefreshed",
+  "nextMinted",
+  "nextRedeemed",
+];
 
 const PHASES = [
   "start",
@@ -190,6 +209,12 @@ function assertMath() {
   if (HELD_NEED > HELD_VALUE || HELD_VALUE - HELD_PAY !== HELD_LEFT) throw new Error("held collateral");
   if (HELD_PAY < 20_000_000n || HELD_LEFT < 20_000_000n) throw new Error("held dust");
   if (fairSompi(HELD_CENTS, HIGH_PRICE) > HELD_VALUE) throw new Error("held attack should still fit");
+  if (fairSompi(NEXT_CENTS, NEXT_PRICE) !== NEXT_PAY) throw new Error("next pay");
+  if (atRatio(NEXT_CENTS, NEXT_PRICE, RATIO) !== NEXT_NEED) throw new Error("next ratio");
+  if (NEXT_NEED > HELD_LEFT || HELD_LEFT - NEXT_PAY !== NEXT_LEFT) throw new Error("next collateral");
+  if (NEXT_PAY < 20_000_000n || NEXT_LEFT < 20_000_000n) throw new Error("next dust");
+  if (fairSompi(HELD_CENTS, HELD_PRICE) !== NEXT_PAY) throw new Error("next note should pay the same sompi");
+  if (BLOCK_SUBSIDY !== BLOCK_FREE + BLOCK_LOCK) throw new Error("devnet split");
 }
 
 function budgetForUsed(used) {
@@ -449,6 +474,48 @@ async function blockStamp(kaspa, rpc, hash) {
     }
   }
   return last;
+}
+
+function outputScript(output) {
+  const spk = output.scriptPublicKey || output.script_public_key || "";
+  return scriptHex(spk.script || spk);
+}
+
+async function blockCoinbase(kaspa, rpc, hash) {
+  const ids = [hash];
+  try {
+    ids.push(new kaspa.Hash(hash));
+  } catch {
+    // A string hash is enough when the client accepts it.
+  }
+  let found = null;
+  let last = "no block";
+  for (const id of ids) {
+    try {
+      found = await rpc.getBlock({ hash: id, includeTransactions: true });
+      break;
+    } catch (error) {
+      last = hide(error && error.message ? error.message : error).slice(0, 180);
+    }
+  }
+  if (!found) throw new Error(last);
+  const block = found.block || found;
+  const txs = block.transactions || [];
+  if (!txs.length) throw new Error("block has no coinbase");
+  const outputs = (txs[0].outputs || []).map((output) => {
+    const script = outputScript(output);
+    return {
+      value: BigInt(output.value).toString(),
+      stp: script.includes("0453545031"),
+    };
+  });
+  const header = block.header || {};
+  return {
+    hash,
+    txCount: txs.length,
+    daa: header.daaScore == null ? "" : BigInt(header.daaScore).toString(),
+    outputs,
+  };
 }
 
 async function utxosOf(rpc, address) {
@@ -850,7 +917,7 @@ async function main() {
       }
     }
 
-    if (process.argv.includes("--held")) {
+    if (process.argv.includes("--held") || process.argv.includes("--next")) {
       const held = loadJson(HELD_FILE, {
         phase: "start",
         network: NETWORK,
@@ -980,7 +1047,159 @@ async function main() {
         return { vault, note };
       }
 
-      if (heldAtLeast("heldRedeemed")) {
+      if (process.argv.includes("--next")) {
+        if (!heldAtLeast("heldRedeemed")) throw new Error("the next payout waits until the held redeem");
+        const sitting = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: HELD_PRICE });
+        const refreshed = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: NEXT_PRICE });
+        const mintedVaultNext = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: NEXT_CENTS, quote: NEXT_PRICE });
+        const mintedNoteNext = shape(wallets.two.pub, extension, oracle.pub, {
+          amount: NEXT_CENTS,
+          owner: wallets.two.pub,
+          kind: 2,
+          debt: 0,
+          sealed: 1,
+          quote: NEXT_PRICE,
+        });
+        const doneNext = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: NEXT_PRICE });
+
+        if (!heldAtLeast("nextRefreshed")) {
+          const have = await waitRow(rpc, kaspa, sitting, HELD_LEFT, FIXED);
+          if (have.covenantId !== held.heldOpened.covenantId) throw new Error("next vault is not the held covenant");
+          const window = windowFor(Date.now(), false);
+          const signed = signPrice(NEXT_PRICE, window.notBefore, window.expiry, oracle.priv);
+          if (signed.pub.toString("hex") !== oracle.pub) throw new Error("next refresh signed a different oracle");
+          const built = compile(refreshed, FIXED);
+          await heldAccept("next-refresh", "nextRefreshed", wallets.one, {
+            feeNeed: HELD_FEE,
+            lockTime: window.lockTime,
+            covenantRows: [have.row],
+            sigs: [{ index: 0, built: have.built, entry: "refreshSolo", key: wallets.one.key, args: [NEXT_PRICE, window.notBefore, window.expiry, signed.sig] }],
+            fixed: (sdk) => [{
+              value: HELD_LEFT,
+              script: sdk.payToScriptHashScript(built.redeem),
+              covenant: binding(sdk, 0, have.covenantId),
+            }],
+          }, () => waitRow(rpc, kaspa, refreshed, HELD_LEFT, FIXED));
+          say(`next-refresh price=${NEXT_PRICE} owner-signed=false value=${HELD_LEFT}`);
+        }
+
+        if (!heldAtLeast("nextMinted")) {
+          const have = await waitRow(rpc, kaspa, refreshed, HELD_LEFT, FIXED);
+          if (have.covenantId !== held.heldOpened.covenantId) throw new Error("next refresh covenant drifted");
+          const mintedBuilt = compile(mintedVaultNext, FIXED);
+          const noteBuilt = compile(mintedNoteNext, FIXED);
+          const window = windowFor(Date.now(), false);
+          const signed = signPrice(NEXT_PRICE, window.notBefore, window.expiry, oracle.priv);
+          const args = [NEXT_CENTS, Buffer.from(wallets.two.pub, "hex"), NEXT_PRICE, window.notBefore, window.expiry, signed.sig, "OWNER"];
+          await heldAccept("next-mint", "nextMinted", wallets.one, {
+            feeNeed: CARRIER + HELD_FEE,
+            lockTime: window.lockTime,
+            covenantRows: [have.row],
+            sigs: [{ index: 0, built: have.built, entry: "mint", key: wallets.one.key, args }],
+            fixed: (sdk) => [
+              { value: HELD_LEFT, script: sdk.payToScriptHashScript(mintedBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+              { value: CARRIER, script: sdk.payToScriptHashScript(noteBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+            ],
+          }, async () => ({
+            vault: await waitRow(rpc, kaspa, mintedVaultNext, HELD_LEFT, FIXED),
+            note: await waitRow(rpc, kaspa, mintedNoteNext, CARRIER, FIXED),
+          }));
+        }
+
+        let redeemed;
+        if (!heldAtLeast("nextRedeemed")) {
+          const minted = {
+            vault: await waitRow(rpc, kaspa, mintedVaultNext, HELD_LEFT, FIXED),
+            note: await waitRow(rpc, kaspa, mintedNoteNext, CARRIER, FIXED),
+          };
+          if (minted.vault.covenantId !== held.heldOpened.covenantId) throw new Error("next mint covenant drifted");
+          const doneBuilt = compile(doneNext, FIXED);
+          redeemed = await heldAccept("next-redeem", "nextRedeemed", wallets.two, {
+            feeNeed: HELD_FEE,
+            lockTime: 0,
+            covenantRows: [minted.vault.row, minted.note.row],
+            sigs: [
+              { index: 0, built: minted.vault.built, entry: "vaultRedeem", key: wallets.two.key, args: [] },
+              { index: 1, built: minted.note.built, entry: "noteRedeem", key: wallets.two.key, args: ["OWNER"] },
+            ],
+            fixed: (sdk) => [
+              { value: NEXT_LEFT, script: sdk.payToScriptHashScript(doneBuilt.redeem), covenant: binding(sdk, 0, minted.vault.covenantId) },
+              { value: NEXT_PAY, script: sdk.payToAddressScript(wallets.two.address) },
+              { value: CARRIER, script: sdk.payToAddressScript(wallets.two.address) },
+            ],
+          }, async () => {
+            const vault = await waitRow(rpc, kaspa, doneNext, NEXT_LEFT, FIXED);
+            const txid = held.nextRedeemed.txid;
+            const pays = await waitPay(rpc, wallets.two.address, txid, [NEXT_PAY, CARRIER]);
+            return { vault, pays, txid };
+          });
+        } else {
+          say("next-redeem already nextRedeemed");
+          const vault = await waitRow(rpc, kaspa, doneNext, NEXT_LEFT, FIXED);
+          const pays = await waitPay(rpc, wallets.two.address, held.nextRedeemed.txid, [NEXT_PAY, CARRIER]);
+          redeemed = { vault, pays, txid: held.nextRedeemed.txid };
+        }
+        if (redeemed.vault.covenantId !== held.heldOpened.covenantId) throw new Error("next redeem covenant drifted");
+        if (BigInt(redeemed.vault.row.amount) !== NEXT_LEFT) throw new Error(`next surplus is ${redeemed.vault.row.amount}`);
+
+        if (!held.nextRedeemBlock) {
+          const included = await dagOf(rpc);
+          held.nextRedeemBlock = included.sink;
+          saveJson(HELD_FILE, held);
+        }
+        if (!held.nextIncludedCoinbase) {
+          held.nextIncludedCoinbase = await blockCoinbase(kaspa, rpc, held.nextRedeemBlock);
+          saveJson(HELD_FILE, held);
+          journal({ label: "next-included-coinbase", ...held.nextIncludedCoinbase, includedTx: held.nextRedeemed.txid });
+        }
+        if (!held.nextCoinbase) {
+          mineOne(wallets.three.address);
+          const paying = await dagOf(rpc);
+          const coinbase = await blockCoinbase(kaspa, rpc, paying.sink);
+          held.nextPayBlock = paying.sink;
+          held.nextCoinbase = coinbase;
+          saveJson(HELD_FILE, held);
+          journal({ label: "next-coinbase", ...coinbase, payFor: held.nextRedeemed.txid, included: held.nextRedeemBlock });
+        }
+        const end = await dagOf(rpc);
+        say(`RESULT next ${JSON.stringify({
+          observed: held.nextCoinbase ? "accepted" : "missing-coinbase",
+          refresh: held.nextRefreshed.txid,
+          mint: held.nextMinted.txid,
+          redeem: held.nextRedeemed.txid,
+          cents: NEXT_CENTS,
+          price: NEXT_PRICE,
+          pay: NEXT_PAY.toString(),
+          surplus: NEXT_LEFT.toString(),
+          sameSompiAsHeld: true,
+          covenant: redeemed.vault.covenantId,
+          included: held.nextRedeemBlock,
+          includedCoinbase: held.nextIncludedCoinbase,
+          payBlock: held.nextPayBlock,
+          coinbase: held.nextCoinbase,
+          redeemFee: held.nextRedeemed.fee,
+          virtualDaa: end.virtualDaa.toString(),
+          sink: end.sink,
+          median: end.median,
+          fees: {
+            refresh: held.nextRefreshed.fee,
+            mint: held.nextMinted.fee,
+            redeem: held.nextRedeemed.fee,
+          },
+          budgets: {
+            refresh: held.nextRefreshed.budget,
+            mint: held.nextMinted.budget,
+            redeem: held.nextRedeemed.budget,
+          },
+        })}`);
+        return;
+      }
+
+      if (heldAtLeast("nextRefreshed")) {
+        throw new Error("pass --next to read the later payout");
+      }
+
+      if (held.phase === "heldRedeemed") {
         const vault = await waitRow(rpc, kaspa, doneVault, HELD_LEFT, FIXED);
         const pays = await waitPay(rpc, wallets.two.address, held.heldRedeemed.txid, [HELD_PAY, CARRIER]);
         if (RECORDED_COVENANTS.has(vault.covenantId)) throw new Error("held redeem landed on a recorded covenant");

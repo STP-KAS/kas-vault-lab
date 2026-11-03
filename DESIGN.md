@@ -129,4 +129,6 @@ Positive mint, seal, withdraw, and liquidate still need a real transaction signa
 
 **Fact.** The paragraph above describes the source that was broadcast on 2 Nov 2026. That source is now `contracts/peg-2026-11-02.sil`. Covenant A commits it. Editing `contracts/peg.sil` does not change that output. On 3 Nov 2026 `refreshVault` and `refreshNote` in `contracts/peg.sil` require the signed price to equal the stored quote, and they continue the vault and the note at that stored quote. A different price fails. `refreshSolo`, `mint`, `seal`, `withdraw`, and the two redeem entries are otherwise the same. The new vault's ids are in `RESULTS.md`. The node still reports one generic script-failure sentence.
 
+**Fact.** The same morning `refreshSolo` on that new vault stored 200000000 while debt was 0. The entry still has no owner signature. The following 10-cent mint and redeem used that stored quote. The ids are in `RESULTS.md`.
+
 **Fact.** A local `silverc` of `peg.sil` with `contracts/peg.args.json` wrote `compiler_version` `0.1.0` on 1 Nov 2026. The artifact is gitignored. `cli-debugger` was not on this desk for that run, so `peg.sil` has no debugger count next to the 15 vault cases. `node --test model/issues.test.mjs` is the run that was executed. It checks the integers and the DAG pictures. It does not execute the script.

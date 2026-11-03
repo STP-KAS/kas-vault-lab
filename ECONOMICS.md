@@ -162,3 +162,11 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 **Fact.** A new vault locked 100000000 sompi. Twenty cents were minted at price 100000000. `fairSompi` at that price is 20000000. The lab key asked to store 400000000 while the note was outstanding. `fairSompi` at that price is 80000000, which fits, and 20000000 would have remained. The node rejected the refresh. The holder redeemed 20000000 and left 80000000. The fees were 4004100, 3573400, 2012200, and 3878000 sompi, each from a coin outside the lock. The ids are in `RESULTS.md`.
 
 **Reasoning.** The shop that took this note at 0.2 KAS per 0.20 was paid 0.2 KAS. The key signed a different number and the script refused to store it. That is one vault, opened after the rule changed. It does not rewrite the note covenant A already paid at 0.4 KAS. It also does not fix the next mint. When debt is 0, the same key can still set the quote the following note will redeem. The miner was paid in KAS, from outside the lock.
+
+## The following note paid the same kas, 3 Nov 2026
+
+**Fact.** The vault then held 80000000 sompi at quote 100000000, and the debt was 0. `refreshSolo` stored 200000000. No owner signature. A mint of 10 cents at that price has `fairSompi` 20000000 and `atRatio` 40000000. The redeem paid 20000000 and left 60000000. The fees were 4562000, 2012000, and 5222300 sompi, each from a coin outside the lock. The ids are in `RESULTS.md`.
+
+**Fact.** The child of the redeem block paid the miner 2205222300 sompi and locked 2200000000. The free output is half of the 4400000000 month-0 subsidy plus the 5222300 redeem fee. The block that included the redeem paid 2202012000, which is the same half plus the 2012000 mint fee. Official Kaspa pays those fees inside the one unsplit subsidy output. On 3 Nov 2026 the public block reward was 2.06017223 KAS.
+
+**Reasoning.** A shop that took 10 cents after this refresh was paid the same 0.2 KAS a shop would have been paid for 20 cents at the old quote. The key chose that. The miner who found the paying block received about half of a devnet subsidy, plus the fee, and the locked half did not move. The holder's kas came from the vault. Paying the miner less did not supply the price.
