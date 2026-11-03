@@ -4,9 +4,11 @@
 // A confirmed redeem is a covenant UTXO on this devnet. The quote is a lab key.
 // --late signs one mint, waits until that window's expiry, then submits the same bytes.
 // --live mints a note and refreshes its price without the holder's signature.
+// That path compiles contracts/peg-2026-11-02.sil, the script covenant A committed.
+// --held compiles contracts/peg.sil on a new vault. An outstanding note keeps its quote.
 
 import { createRequire } from "node:module";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -23,11 +25,13 @@ const SILVERC = "C:\\Users\\Remco\\tools\\silverc\\silverc.exe";
 const MINE = "C:\\Users\\Remco\\Documents\\kaspa\\stpnet\\target\\release\\stp-mine.exe";
 const KEYS = "C:\\kaspa-stpnet\\wallets\\keys.txt";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const SOURCE = join(ROOT, "contracts", "peg.sil");
+const SOURCE = join(ROOT, "contracts", "peg-2026-11-02.sil");
+const FIXED = join(ROOT, "contracts", "peg.sil");
 const LOCAL = join(ROOT, ".local");
 const RESULTS = join(ROOT, "results");
 const ORACLE_FILE = join(LOCAL, "devnet-oracle.json");
 const STATE_FILE = join(LOCAL, "devnet-peg-state.json");
+const HELD_FILE = join(LOCAL, "devnet-held-state.json");
 const JOURNAL = join(RESULTS, "devnet-peg.jsonl");
 
 const COLLATERAL = 300_000_000n;
@@ -62,8 +66,21 @@ const DOWN_PRICE = 200_000_000;
 const DOWN_PAY = 40_000_000n;
 const DOWN_LEFT = 35_000_000n;
 const LIVE_FEE = 16_000_000n;
+const HELD_CENTS = 20;
+const HELD_PRICE = 100_000_000;
+const HELD_VALUE = 100_000_000n;
+const HELD_PAY = 20_000_000n;
+const HELD_LEFT = 80_000_000n;
+const HELD_NEED = 40_000_000n;
+const HELD_FEE = 40_000_000n;
+const RECORDED_COVENANTS = new Set([
+  "e40a6989ec65243ee67361d334c7131776f1cea34f3913edf3d76bb74d62f44a",
+  "37419615c748e6d670d1790586f7b80c7000ed110b7b7cb01f7270c89c192cf3",
+]);
 const ZERO = "00".repeat(32);
 const LOCK_TIME_THRESHOLD = 500_000_000_000;
+
+const HELD_PHASES = ["start", "heldOpened", "heldSealed", "heldMinted", "heldRejected", "heldRedeemed"];
 
 const PHASES = [
   "start",
@@ -168,6 +185,11 @@ function assertMath() {
   if (HIGH_PAY <= LIVE_VALUE) throw new Error("high quote should not fit");
   if (fairSompi(LIVE_CENTS, DOWN_PRICE) !== DOWN_PAY) throw new Error("down pay");
   if (LIVE_VALUE - DOWN_PAY !== DOWN_LEFT || DOWN_LEFT < 20_000_000n) throw new Error("down surplus");
+  if (fairSompi(HELD_CENTS, HELD_PRICE) !== HELD_PAY) throw new Error("held pay");
+  if (atRatio(HELD_CENTS, HELD_PRICE, RATIO) !== HELD_NEED) throw new Error("held ratio");
+  if (HELD_NEED > HELD_VALUE || HELD_VALUE - HELD_PAY !== HELD_LEFT) throw new Error("held collateral");
+  if (HELD_PAY < 20_000_000n || HELD_LEFT < 20_000_000n) throw new Error("held dust");
+  if (fairSompi(HELD_CENTS, HIGH_PRICE) > HELD_VALUE) throw new Error("held attack should still fit");
 }
 
 function budgetForUsed(used) {
@@ -236,8 +258,8 @@ function ctorJson(contractState) {
 
 const compiled = new Map();
 
-function compile(contractState) {
-  const key = JSON.stringify(contractState);
+function compile(contractState, source = SOURCE) {
+  const key = `${source}\n${JSON.stringify(contractState)}`;
   const hit = compiled.get(key);
   if (hit) return hit;
   const dir = join(tmpdir(), "kas-vault-lab-devnet");
@@ -246,7 +268,7 @@ function compile(contractState) {
   const argsPath = join(dir, `args-${stamp}.json`);
   const outPath = join(dir, `peg-${stamp}.json`);
   writeFileSync(argsPath, JSON.stringify(ctorJson(contractState)));
-  const result = spawnSync(SILVERC, [SOURCE, "--constructor-args", argsPath, "-o", outPath], {
+  const result = spawnSync(SILVERC, [source, "--constructor-args", argsPath, "-o", outPath], {
     encoding: "utf8",
     cwd: ROOT,
   });
@@ -573,6 +595,11 @@ async function submitOnce(kaspa, rpc, spec) {
       }
       const failure = new Error(lastError);
       failure.rejected = true;
+      try {
+        failure.txid = hexOf(tx.id);
+      } catch {
+        failure.txid = "";
+      }
       throw failure;
     }
   }
@@ -641,8 +668,8 @@ function p2sh(kaspa, built) {
   return kaspa.addressFromScriptPublicKey(kaspa.payToScriptHashScript(built.redeem), NETWORK).toString();
 }
 
-async function findRow(rpc, kaspa, contractState, amount) {
-  const built = compile(contractState);
+async function findRow(rpc, kaspa, contractState, amount, source = SOURCE) {
+  const built = compile(contractState, source);
   const address = p2sh(kaspa, built);
   const rows = await utxosOf(rpc, address);
   const hit = rows.find((row) => BigInt(row.amount) === amount);
@@ -650,13 +677,13 @@ async function findRow(rpc, kaspa, contractState, amount) {
   return { built, address, row: hit, covenantId: covOf(hit) };
 }
 
-async function waitRow(rpc, kaspa, contractState, amount) {
+async function waitRow(rpc, kaspa, contractState, amount, source = SOURCE) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    const found = await findRow(rpc, kaspa, contractState, amount);
+    const found = await findRow(rpc, kaspa, contractState, amount, source);
     if (found && found.covenantId) return found;
     await sleep(500);
   }
-  const built = compile(contractState);
+  const built = compile(contractState, source);
   throw new Error(`output ${amount} is not visible at ${p2sh(kaspa, built)}`);
 }
 
@@ -821,6 +848,305 @@ async function main() {
         state[phase] = { observed: "rejected", error: String(error.message).slice(0, 800) };
         saveJson(STATE_FILE, state);
       }
+    }
+
+    if (process.argv.includes("--held")) {
+      const held = loadJson(HELD_FILE, {
+        phase: "start",
+        network: NETWORK,
+        url: URL,
+        extension: randomBytes(32).toString("hex"),
+        oraclePub: oracle.pub,
+        source: "contracts/peg.sil",
+        steps: [],
+      });
+      if (held.oraclePub !== oracle.pub) throw new Error("held oracle does not match the oracle file");
+      if (held.url !== URL) throw new Error("held url is not the local devnet");
+      if (!held.extension || held.extension === state.extensionA || held.extension === state.extensionB) {
+        throw new Error("held extension collides with a recorded vault");
+      }
+
+      function heldAtLeast(phase) {
+        const at = HELD_PHASES.indexOf(held.phase);
+        const want = HELD_PHASES.indexOf(phase);
+        if (at < 0 || want < 0) throw new Error(`unknown held phase ${held.phase} ${phase}`);
+        return at >= want;
+      }
+
+      function heldRecord(row) {
+        held.steps.push(row);
+        saveJson(HELD_FILE, held);
+        journal(row);
+        const tail = row.txid ? ` ${row.txid}` : "";
+        say(`${row.label} ${row.observed}${tail}`);
+      }
+
+      async function heldAccept(label, phase, wallet, spec, confirm) {
+        if (!heldAtLeast(phase)) {
+          const sent = await send(label, wallet, spec);
+          held.phase = phase;
+          held[phase] = {
+            txid: sent.id,
+            fee: sent.fee,
+            budget: sent.budget,
+            change: sent.change,
+            covenantId: sent.covenantId,
+          };
+          heldRecord({
+            label,
+            expected: "accept",
+            observed: "accepted",
+            txid: sent.id,
+            fee: sent.fee,
+            budget: sent.budget,
+            change: sent.change,
+            covenantId: sent.covenantId,
+          });
+          mineOne(wallets.three.address);
+        } else {
+          say(`${label} already ${phase}`);
+        }
+        return confirm();
+      }
+
+      async function heldReject(label, phase, wallet, spec) {
+        if (heldAtLeast(phase)) {
+          say(`${label} already ${phase}`);
+          return;
+        }
+        try {
+          const sent = await send(label, wallet, spec);
+          held.phase = phase;
+          held[phase] = { txid: sent.id, observed: "accepted" };
+          heldRecord({ label, expected: "reject", observed: "accepted", txid: sent.id, fee: sent.fee, budget: sent.budget });
+          throw new Error(`${label} was accepted ${sent.id}`);
+        } catch (error) {
+          if (!error.rejected) throw error;
+          if (/insufficient fee|fee rate|feerate|\bmass\b|orphan|not synced|compute budget|signature script length|not final|ECONN|timed out|socket hang/i.test(error.message)) {
+            throw error;
+          }
+          if (!/script ran, but verification failed/i.test(error.message)) throw error;
+          const named = String(error.message).match(/Rejected transaction ([0-9a-f]{64})/i);
+          const txid = String(error.txid || (named && named[1]) || "").toLowerCase();
+          if (named && error.txid && named[1].toLowerCase() !== String(error.txid).toLowerCase()) {
+            throw new Error("rejected id does not match the node text");
+          }
+          if (!txid) throw new Error("rejected refresh has no transaction id");
+          held.phase = phase;
+          held[phase] = { observed: "rejected", txid, error: String(error.message).slice(0, 800) };
+          heldRecord({ label, expected: "reject", observed: "rejected", txid, error: String(error.message).slice(0, 800) });
+        }
+      }
+
+      const extension = held.extension;
+      const openState = shape(wallets.one.pub, extension, oracle.pub);
+      const sealedState = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1 });
+      const mintedVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: HELD_CENTS, quote: HELD_PRICE });
+      const mintedNote = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: HELD_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: HELD_PRICE,
+      });
+      const attackVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: HELD_CENTS, quote: HIGH_PRICE });
+      const attackNote = shape(wallets.two.pub, extension, oracle.pub, {
+        amount: HELD_CENTS,
+        owner: wallets.two.pub,
+        kind: 2,
+        debt: 0,
+        sealed: 1,
+        quote: HIGH_PRICE,
+      });
+      const doneVault = shape(wallets.one.pub, extension, oracle.pub, { sealed: 1, debt: 0, quote: HELD_PRICE });
+      const fixedOpen = compile(openState, FIXED);
+      const oldOpen = compile(openState, SOURCE);
+      if (fixedOpen.redeem.equals(oldOpen.redeem)) throw new Error("held script matches the 2 Nov script");
+      const scriptSha = createHash("sha256").update(fixedOpen.redeem).digest("hex");
+      const priorSha = createHash("sha256").update(oldOpen.redeem).digest("hex");
+      if (held.scriptSha256 && held.scriptSha256 !== scriptSha) {
+        throw new Error("held script does not match the vault that was opened");
+      }
+      held.scriptSha256 = scriptSha;
+      held.priorSha256 = priorSha;
+      saveJson(HELD_FILE, held);
+      say(`held script ${fixedOpen.redeem.length} sha256=${scriptSha}`);
+      say(`prior script ${oldOpen.redeem.length} sha256=${priorSha}`);
+
+      async function heldPair() {
+        const vault = await waitRow(rpc, kaspa, mintedVault, HELD_VALUE, FIXED);
+        const note = await waitRow(rpc, kaspa, mintedNote, CARRIER, FIXED);
+        return { vault, note };
+      }
+
+      if (heldAtLeast("heldRedeemed")) {
+        const vault = await waitRow(rpc, kaspa, doneVault, HELD_LEFT, FIXED);
+        const pays = await waitPay(rpc, wallets.two.address, held.heldRedeemed.txid, [HELD_PAY, CARRIER]);
+        if (RECORDED_COVENANTS.has(vault.covenantId)) throw new Error("held redeem landed on a recorded covenant");
+        if (vault.covenantId !== held.heldOpened.covenantId) throw new Error("held covenant changed");
+        const end = await dagOf(rpc);
+        say(`RESULT held ${JSON.stringify({
+          observed: "read-back",
+          open: held.heldOpened.txid,
+          mint: held.heldMinted.txid,
+          reject: held.heldRejected.txid,
+          redeem: held.heldRedeemed.txid,
+          surplus: vault.row.amount.toString(),
+          pay: HELD_PAY.toString(),
+          pays,
+          covenant: vault.covenantId,
+          quote: HELD_PRICE,
+          virtualDaa: end.virtualDaa.toString(),
+          sink: end.sink,
+          median: end.median,
+        })}`);
+        return;
+      }
+
+      if (!heldAtLeast("heldSealed")) {
+        const opened = await heldAccept("held-open", "heldOpened", wallets.one, {
+          feeNeed: HELD_VALUE + HELD_FEE,
+          lockTime: 0,
+          genesis: true,
+          genesisOutputs: [0],
+          covenantRows: [],
+          sigs: [],
+          fixed: () => [{ value: HELD_VALUE, script: kaspa.payToScriptHashScript(fixedOpen.redeem) }],
+        }, () => waitRow(rpc, kaspa, openState, HELD_VALUE, FIXED));
+        if (RECORDED_COVENANTS.has(opened.covenantId)) throw new Error("held open reused a recorded covenant");
+        say(`held-open covenant=${opened.covenantId} value=${opened.row.amount}`);
+      }
+
+      let sealed = null;
+      if (!heldAtLeast("heldMinted")) {
+        if (!heldAtLeast("heldSealed")) {
+          const opened = await waitRow(rpc, kaspa, openState, HELD_VALUE, FIXED);
+          const sealedBuilt = compile(sealedState, FIXED);
+          sealed = await heldAccept("held-seal", "heldSealed", wallets.one, {
+            feeNeed: HELD_FEE,
+            lockTime: 0,
+            covenantRows: [opened.row],
+            sigs: [{ index: 0, built: opened.built, entry: "seal", key: wallets.one.key, args: ["OWNER"] }],
+            fixed: (sdk) => [{
+              value: HELD_VALUE,
+              script: sdk.payToScriptHashScript(sealedBuilt.redeem),
+              covenant: binding(sdk, 0, opened.covenantId),
+            }],
+          }, () => waitRow(rpc, kaspa, sealedState, HELD_VALUE, FIXED));
+        } else {
+          sealed = await waitRow(rpc, kaspa, sealedState, HELD_VALUE, FIXED);
+        }
+        if (sealed.covenantId !== held.heldOpened.covenantId) throw new Error("held seal covenant drifted");
+        say(`held-seal covenant=${sealed.covenantId} value=${sealed.row.amount}`);
+      }
+
+      if (!heldAtLeast("heldMinted")) {
+        const have = sealed;
+        const mintedBuilt = compile(mintedVault, FIXED);
+        const noteBuilt = compile(mintedNote, FIXED);
+        const window = windowFor(Date.now(), false);
+        const signed = signPrice(HELD_PRICE, window.notBefore, window.expiry, oracle.priv);
+        const args = [HELD_CENTS, Buffer.from(wallets.two.pub, "hex"), HELD_PRICE, window.notBefore, window.expiry, signed.sig, "OWNER"];
+        await heldAccept("held-mint", "heldMinted", wallets.one, {
+          feeNeed: CARRIER + HELD_FEE,
+          lockTime: window.lockTime,
+          covenantRows: [have.row],
+          sigs: [{ index: 0, built: have.built, entry: "mint", key: wallets.one.key, args }],
+          fixed: (sdk) => [
+            { value: HELD_VALUE, script: sdk.payToScriptHashScript(mintedBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+            { value: CARRIER, script: sdk.payToScriptHashScript(noteBuilt.redeem), covenant: binding(sdk, 0, have.covenantId) },
+          ],
+        }, () => heldPair());
+      }
+
+      const minted = await heldPair();
+      if (minted.vault.covenantId !== held.heldOpened.covenantId) throw new Error("held mint covenant drifted");
+      if (minted.note.covenantId !== minted.vault.covenantId) throw new Error("held note covenant drifted");
+      say(`held-mint covenant=${minted.vault.covenantId} note=${minted.note.address}`);
+
+      if (!heldAtLeast("heldRejected")) {
+        const window = windowFor(Date.now(), false);
+        const signed = signPrice(HIGH_PRICE, window.notBefore, window.expiry, oracle.priv);
+        if (signed.pub.toString("hex") !== oracle.pub) throw new Error("held refresh signed a different oracle");
+        const toVault = compile(attackVault, FIXED);
+        const toNote = compile(attackNote, FIXED);
+        await heldReject("held-reject-refresh", "heldRejected", wallets.one, {
+          feeNeed: HELD_FEE,
+          lockTime: window.lockTime,
+          covenantRows: [minted.vault.row, minted.note.row],
+          sigs: [
+            { index: 0, built: minted.vault.built, entry: "refreshVault", key: wallets.one.key, args: [HIGH_PRICE, window.notBefore, window.expiry, signed.sig] },
+            { index: 1, built: minted.note.built, entry: "refreshNote", key: wallets.one.key, args: [HIGH_PRICE, window.notBefore, window.expiry, signed.sig] },
+          ],
+          fixed: (sdk) => [
+            { value: HELD_VALUE, script: sdk.payToScriptHashScript(toVault.redeem), covenant: binding(sdk, 0, minted.vault.covenantId) },
+            { value: CARRIER, script: sdk.payToScriptHashScript(toNote.redeem), covenant: binding(sdk, 1, minted.vault.covenantId) },
+          ],
+        });
+        say(`held-reject-refresh price=${HIGH_PRICE} stored=${HELD_PRICE} holder-signed=false fit=${fairSompi(HELD_CENTS, HIGH_PRICE)}`);
+      }
+
+      const still = await heldPair();
+      if (still.vault.covenantId !== held.heldOpened.covenantId) throw new Error("held note moved");
+      const doneBuilt = compile(doneVault, FIXED);
+      const redeemed = await heldAccept("held-redeem", "heldRedeemed", wallets.two, {
+        feeNeed: HELD_FEE,
+        lockTime: 0,
+        covenantRows: [still.vault.row, still.note.row],
+        sigs: [
+          { index: 0, built: still.vault.built, entry: "vaultRedeem", key: wallets.two.key, args: [] },
+          { index: 1, built: still.note.built, entry: "noteRedeem", key: wallets.two.key, args: ["OWNER"] },
+        ],
+        fixed: (sdk) => [
+          { value: HELD_LEFT, script: sdk.payToScriptHashScript(doneBuilt.redeem), covenant: binding(sdk, 0, still.vault.covenantId) },
+          { value: HELD_PAY, script: sdk.payToAddressScript(wallets.two.address) },
+          { value: CARRIER, script: sdk.payToAddressScript(wallets.two.address) },
+        ],
+      }, async () => {
+        const vault = await waitRow(rpc, kaspa, doneVault, HELD_LEFT, FIXED);
+        const txid = held.heldRedeemed.txid;
+        const pays = await waitPay(rpc, wallets.two.address, txid, [HELD_PAY, CARRIER]);
+        return { vault, pays, txid };
+      });
+      if (redeemed.vault.covenantId !== held.heldOpened.covenantId) throw new Error("held redeem covenant drifted");
+      if (BigInt(redeemed.vault.row.amount) !== HELD_LEFT) throw new Error(`held surplus is ${redeemed.vault.row.amount}`);
+      const end = await dagOf(rpc);
+      say(`RESULT held ${JSON.stringify({
+        observed: "accepted",
+        open: held.heldOpened.txid,
+        seal: held.heldSealed.txid,
+        mint: held.heldMinted.txid,
+        reject: held.heldRejected.txid,
+        redeem: redeemed.txid,
+        cents: HELD_CENTS,
+        mintPrice: HELD_PRICE,
+        attackPrice: HIGH_PRICE,
+        attackFair: fairSompi(HELD_CENTS, HIGH_PRICE).toString(),
+        surplus: redeemed.vault.row.amount.toString(),
+        pay: HELD_PAY.toString(),
+        carrier: CARRIER.toString(),
+        covenant: redeemed.vault.covenantId,
+        quote: HELD_PRICE,
+        scriptSha,
+        priorSha,
+        virtualDaa: end.virtualDaa.toString(),
+        sink: end.sink,
+        median: end.median,
+        fees: {
+          open: held.heldOpened.fee,
+          seal: held.heldSealed.fee,
+          mint: held.heldMinted.fee,
+          redeem: held.heldRedeemed.fee,
+        },
+        budgets: {
+          open: held.heldOpened.budget,
+          seal: held.heldSealed.budget,
+          mint: held.heldMinted.budget,
+          redeem: held.heldRedeemed.budget,
+        },
+      })}`);
+      return;
     }
 
     if (process.argv.includes("--late")) {

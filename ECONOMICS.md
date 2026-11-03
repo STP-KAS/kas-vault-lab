@@ -156,3 +156,9 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 **Fact.** Twenty cents were minted at price 100000000 against 75000000 sompi. `fairSompi` at that price is 20000000. The lab key stored 400000000 while the note was outstanding. `fairSompi` became 80000000, which is more than the vault. A redeem that offered 40000000 was rejected. The key then stored 200000000. The holder redeemed 40000000 and left 35000000. The fees were 4000000, 8871700, 4000000, and 3871600 sompi, each from a coin outside the lock.
 
 **Reasoning.** The holder of the note did not agree to the new price. The script does not ask them. The arithmetic they redeem is the quote at redeem time. A shop that took the note at 0.2 KAS per 0.20 was paid 0.4 KAS, and for a few seconds the vault could not pay at all. That is the key's power over a note already in someone else's hands. The miner still found the blocks and was paid in KAS.
+
+## An outstanding note kept its quote, 3 Nov 2026
+
+**Fact.** A new vault locked 100000000 sompi. Twenty cents were minted at price 100000000. `fairSompi` at that price is 20000000. The lab key asked to store 400000000 while the note was outstanding. `fairSompi` at that price is 80000000, which fits, and 20000000 would have remained. The node rejected the refresh. The holder redeemed 20000000 and left 80000000. The fees were 4004100, 3573400, 2012200, and 3878000 sompi, each from a coin outside the lock. The ids are in `RESULTS.md`.
+
+**Reasoning.** The shop that took this note at 0.2 KAS per 0.20 was paid 0.2 KAS. The key signed a different number and the script refused to store it. That is one vault, opened after the rule changed. It does not rewrite the note covenant A already paid at 0.4 KAS. It also does not fix the next mint. When debt is 0, the same key can still set the quote the following note will redeem. The miner was paid in KAS, from outside the lock.

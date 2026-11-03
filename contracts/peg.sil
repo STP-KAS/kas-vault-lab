@@ -2,9 +2,12 @@ pragma silverscript ^0.1.0;
 
 // Peg rules for one vault lineage. The 27 Oct contract is contracts/vault.sil.
 // This file does not replace it.
-// quote is sompi per 1.00 of the note, stored at mint and at refresh.
-// Redeem pays that stored quote and does not ask for a new oracle signature.
-// Mint and refresh do. The miner fee is not taken from the locked sompi.
+// The 2 Nov 2026 broadcast source is contracts/peg-2026-11-02.sil.
+// Covenant A committed that script. Editing this file does not change that UTXO.
+// quote is sompi per 1.00 of the note. Mint stores it. Redeem pays it.
+// While a note is outstanding, refreshVault and refreshNote keep that quote.
+// refreshSolo still writes a quote when debt is 0.
+// The miner fee is not taken from the locked sompi.
 
 contract Peg(
     int initAmount,
@@ -299,8 +302,10 @@ contract Peg(
         pairShape();
         State note = readInputState(1);
         sameNote(note);
-        continueVault(debt, price);
-        emit(1, note.amount, note.owner, KIND_NOTE, 0, price);
+        // The outstanding quote is the mint quote. A different price fails here.
+        require(price == quote);
+        continueVault(debt, quote);
+        emit(1, note.amount, note.owner, KIND_NOTE, 0, quote);
         priceMessage(price, notBefore, expiry, oracleSig);
     }
 
@@ -316,8 +321,10 @@ contract Peg(
         require(vault.debt == amount);
         require(vault.quote == quote);
         require(vault.extension == extension);
-        emit(0, 0, vault.owner, KIND_VAULT, vault.debt, price);
-        emit(1, amount, owner, KIND_NOTE, 0, price);
+        // The outstanding quote is the mint quote. A different price fails here.
+        require(price == quote);
+        emit(0, 0, vault.owner, KIND_VAULT, vault.debt, quote);
+        emit(1, amount, owner, KIND_NOTE, 0, quote);
         priceMessage(price, notBefore, expiry, oracleSig);
     }
 
