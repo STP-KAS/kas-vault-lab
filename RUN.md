@@ -7,7 +7,7 @@ These commands are for this desk. They are not a public network, and they are no
 No node and no key:
 
 ```
-node --test model/issues.test.mjs model/doors.test.mjs
+node --test model/issues.test.mjs model/doors.test.mjs model/position.test.mjs
 ```
 
 Compile the peg contract. The JSON artifact is gitignored, same as `vault.json`.
@@ -28,6 +28,8 @@ cli-debugger contracts/vault.sil --run-all
 `node script/devnet-peg.mjs` is the 2 Nov desk driver. It talks only to `ws://127.0.0.1:17610` and mines only through `grpc://127.0.0.1:16610`. It refuses a public network argument. `--quote` reads the recorded second redeem. `--late` signs one mint, waits out that window, and submits the same bytes. `--live` reads the recorded reprice of covenant A and compiles `contracts/peg-2026-11-02.sil`. `--held` compiles `contracts/peg.sil`, opens a new vault, and rejects a refresh that would change the outstanding quote. `--next`, after that redeem, lets the key price the following note and reads the child coinbase. The keys and the oracle scalar stay out of git.
 
 `node script/devnet-clock.mjs --again` reads the second DAA spend. It talks to the same half-split port and refuses a public network argument. A later `--again` prints the recorded row. It does not fund another clock, and it does not spend `peg.sil`.
+
+`node script/devnet-position.mjs` talks to the same half-split port and refuses any other network. While the phase file says redeemed, it prints the recorded redeem and returns. It does not open a second position, and it does not spend `peg.sil` or the clocks. The fee floor in that driver is 5000000 sompi. A body at 2000000 was under the node's transient-mass minimum for this contract.
 
 ## The 27 Oct lab
 
