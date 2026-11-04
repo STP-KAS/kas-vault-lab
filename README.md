@@ -6,7 +6,7 @@ Experimental only. This is a study. We are not claiming a stablecoin, a product,
 
 ## What we are doing
 
-We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and two positions on that devnet. The second one stepped twice, and the redeem paid the second quote. On 4 Nov 2026 the next check is a promise counted in sompi. That check is in the model. It is not on a node.
+We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and two positions on that devnet. The second one stepped twice, and the redeem paid the second quote. On 4 Nov 2026 a covenant on that devnet paid a promise of 100000000 sompi. The count was chosen once. The promise moves when KAS moves.
 
 ## Why
 
@@ -36,6 +36,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 3 Nov 2026 | The same half-split devnet, localhost only | [A position locked 2 KAS. One step moved the quote from 300000000 to 400000000. The holder redeemed 0.8 KAS and left 1.2 KAS.](STUDY.md#the-position-3-nov-2026) |
 | 3 Nov 2026 | The same half-split devnet, localhost only | [A second covenant stepped from 400000000 to 533333333. The holder redeemed 1.06666667 KAS and left 0.93333333 KAS.](STUDY.md#a-second-step-3-nov-2026) |
 | 4 Nov 2026 | These notes, no new chain | [A promise counted in sompi. It is chosen once. No quote, no step, and no coinbase face. The model passed. It was not broadcast.](STUDY.md#the-fixed-promise-4-nov-2026) |
+| 4 Nov 2026 | The same half-split devnet, localhost only | [A promise of 100000000 sompi was paid to the bearer. A rewrite of that count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-promise-on-the-node-4-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -49,7 +50,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - A unit mined by hash, immovable by a large holder, with no issuer and no freeze, that still pays miners the full subsidy, does not close as one machine. What stays inside those constraints is the voluntary lock, the full KAS reward, and no freeze. [Schedule, holdings, and a safe place.](STUDY.md#schedule-holdings-and-a-safe-place)
 - Kaspa Dollar's covenants are unpublished, and the five times on their pages do not name a clock. The DAA wait of 8 was accepted twice. The one-entry form was rejected, and the node did not name the line. Their page still prices a window at half of its blocks, so the attack there can be a quarter of hashrate. The position's model asks for a window where that attack is half of hashrate. This desk is the only miner, so that gate was not mined. [Their hours.](STUDY.md#their-hours-read-on-3-nov-2026)
 - Acceptance was not waited out to finality depth. The sink after the position redeem is that redeem's block. A failed script comes back as one sentence.
-- The fixed promise is model-only. A lock of 200000000 sompi can name a promise of 100000000. Adding sompi leaves the promise. The locker can take only the cushion. The bearer is paid the promise, and the surplus returns. No script has committed those rules. [The fixed promise.](STUDY.md#the-fixed-promise-4-nov-2026)
+- The fixed promise was paid once. The bearer received 100000000 sompi from a lock of 200000000. A rewrite of the count was rejected. A withdraw that would have left less than the promise was rejected. A claim that paid 50000000 was rejected. The chain script requires a surplus above zero, so a lock equal to the promise was not this broadcast. The model still allows that equal case. The promise moves when KAS moves. Finality was not waited. [The promise on the node.](STUDY.md#the-promise-on-the-node-4-nov-2026)
 
 ## Shapes
 
@@ -63,7 +64,7 @@ These are different promises. None of them has been chosen. [The doors, side by 
 - [Kaspa Dollar's public pages](STUDY.md#kaspa-dollar-read-on-3-nov-2026), read again on 3 Nov 2026, describe a vault at 2.5 times, a liquidation back toward 2.0, and a median of miner prices. The block reward stays whole. The covenants are unpublished. `peg.sil` was not changed to those ratios.
 - A rollup puts a sequencer back in front of the payments. Refused as an ordering design.
 - The position is the practice this desk would keep while every shape above stays. One person locks KAS they already hold. The miner is paid the full KAS reward. There is no company, no shared pot, no freeze, and no coinbase split. The quote may move by one step, from three quarters through four thirds, and only after a DAA wait. Redeem pays the quote that was stored. A second covenant on the same devnet stepped once more, from 400000000 to 533333333, and the redeem paid that quote. [The position, 3 Nov 2026.](STUDY.md#the-position-3-nov-2026) [A second step, 3 Nov 2026.](STUDY.md#a-second-step-3-nov-2026)
-- The fixed promise is the next pot to test. The count is sompi, chosen once, with no quote and no step. It does not replace the position. It has not been broadcast. [The fixed promise, 4 Nov 2026.](STUDY.md#the-fixed-promise-4-nov-2026)
+- The fixed promise was broadcast once on the same private devnet. The count is sompi, chosen once, with no quote and no step. The bearer was paid 100000000. It does not replace the position. [The promise on the node, 4 Nov 2026.](STUDY.md#the-promise-on-the-node-4-nov-2026)
 
 ## Pushback
 
@@ -81,7 +82,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 
 | File | What it is |
 | --- | --- |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the second step on 3 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the promise paid on 4 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |
@@ -90,6 +91,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | [DESIGN.md](DESIGN.md) | Covenant rules |
 | [contracts/peg.sil](contracts/peg.sil) | Holder redeem at the stored quote |
 | [contracts/position.sil](contracts/position.sil) | One lock, one capped step, the full KAS reward |
-| [model/promise.mjs](model/promise.mjs) | One lock, one sompi promise, no quote. Model only |
+| [contracts/promise.sil](contracts/promise.sil) | One lock, one sompi promise, no quote |
+| [model/promise.mjs](model/promise.mjs) | The same integers. The model still allows a surplus of zero |
 | [contracts/vault.sil](contracts/vault.sil) | The 27 Oct vault. Unchanged |
 | [RUN.md](RUN.md) | Commands for this desk. Not a public run. |

@@ -31,6 +31,8 @@ cli-debugger contracts/vault.sil --run-all
 
 `node script/devnet-position.mjs` talks to the same half-split port and refuses any other network. While its phase file says redeemed, it prints the recorded redeem and returns. `node script/devnet-position.mjs --compound` uses a second phase file. While that file says redeemed, it prints that redeem and returns. It does not open a third covenant, and it does not spend `peg.sil` or the clocks. The fee floor is 5000000 sompi. The picker asks for a coin that can cover 100000000 sompi, because a climbed fee of 10000000 does not fit in the 5735600 coin. A fee climb builds a new covenant binding on every attempt. A body at 2000000 was under the node's transient-mass minimum for this contract.
 
+`node script/devnet-promise.mjs` talks to the same half-split port and refuses any other network. While its phase file says claimed, it prints the recorded claim and returns. It does not open another promise, and it does not spend `peg.sil`, `position.sil`, or the clocks. `--compile` prints the bytecode length and does not submit. The fee floor is 5000000 sompi.
+
 ## The 27 Oct lab
 
 TN10 learning lab. A covenant locks test Kaspa and lets its owner mint and burn a test token named tUSD-TEST. The token is worthless. This is not a stablecoin, not a product, and not money.
