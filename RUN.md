@@ -7,7 +7,7 @@ These commands are for this desk. They are not a public network, and they are no
 No node and no key:
 
 ```
-node --test model/issues.test.mjs model/doors.test.mjs model/position.test.mjs
+node --test model/issues.test.mjs model/doors.test.mjs model/position.test.mjs model/promise.test.mjs
 ```
 
 Compile the peg contract. The JSON artifact is gitignored, same as `vault.json`.

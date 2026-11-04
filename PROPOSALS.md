@@ -25,3 +25,5 @@ Each item says whether it restates a file or adds a judgment.
 10. **Fact.** OLAF's pool header says the note is not a zero-knowledge proof and not a settlement covenant. Keep that beside any privacy claim. Sutton's 11 Oct 2026 post says L1 privacy of that kind needs zk opcodes and is outside KCC-20. Do not describe the pool as a zk spend.
 
 11. **Fact, then the same restraint.** Item 8 described `vault.sil`. `peg.sil` now lets the note holder redeem at the stored quote. Do not add a square button for it. The quote is still a lab key, the token is still worthless, and the square's rails stay `kas`, `poc`, and `kusdt`.
+
+12. **Fact, then the same restraint.** The 4 Nov promise is a count of sompi, chosen once. Do not add a square button for it. Do not describe it as STP, as a stablecoin, or as a rail. The square's rails stay `kas`, `poc`, and `kusdt`.
