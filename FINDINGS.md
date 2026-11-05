@@ -57,3 +57,13 @@ The comparison used placeholder constructor bytes for the promise and the positi
 ## Left undone
 
 No new covenant was written. `position.sil`, `promise.sil`, and `peg.sil` were not edited. The second-step cap and the participation gate were already tests in `model/position.test.mjs`, so they were not copied into a new contract. Liquidation was not added. A miner median was not added. A freeze was not added. The Kaspa Dollar pages were not fetched again. The long notes were not rewritten. No transaction was broadcast. The private devnet was not restarted.
+
+## A bearer handed the same count, 5 Nov 2026
+
+The section above is the extract. This section is the later measurement.
+
+`contracts/promise.sil` was not edited. It still has no entry that changes the bearer. `contracts/promise-pass.sil` is a different file. It has `pass` and `claim`. It has no add and no withdraw. The desk compiler emitted 669 bytes. The same length came back for the next bearer and for a promise of 200000000.
+
+On the half-split devnet the lock was 200000000 sompi and the promise was 100000000. Virtual DAA went from 1296 to 1300. The past median on this read was `1793578216327`. The script does not read it. Covenant `f772aab3e9064fc46bdc4972bcfae0d3ddc7dd8f7510a6f29e7a49de1d498138`. Open `ec3fc3134065c16fb7b4c36c39afa96dc57550db2eca386ef539278cb00e41c6` is in header DAA 1296. Its output script is the first bearer. A pass that paid a redeem compiled for a promise of 200000000 was rejected. That id, `1f6441e8d600989d0d87e95bdf7f60307ce3772a7abd5ba7c10816a20606bd0c`, is not in the chain. The locker signature was rejected. The included pass is `c82ff68ee8e66c4c459d26e5792fae7b4cbd2e612d600af6de1e4ce01003f272`, header DAA 1297. The output script is the next bearer. The covenant id is the same. Those two signatures share one transaction id because a version-1 id does not cover the signature script. The first bearer's claim was rejected. The included claim is `a4717649bd49b02f001bf0ff0e7a24bfff196d62d722a920eaf5b7b75e4843ac`, header DAA 1298. Output 0 paid the locker 100000000. Output 1 paid the next bearer 100000000. The covenant is gone. The next bearer is the address that mines this devnet. There is no fourth key. The pay is an ordinary output. Each fee was 5000000 sompi, and the next free coinbase half carried it. The locked half stayed 2200000000 and still carries `STP1`. The model command passed 52 tests. The model was not changed. Finality was not waited.
+
+This names who may later claim a fixed count. The count stayed. It does not sell KAS, and it does not name a dollar. `promise.sil` still cannot change its bearer.

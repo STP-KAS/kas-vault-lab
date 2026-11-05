@@ -6,7 +6,7 @@ Experimental only. This is a study. We are not claiming a stablecoin, a product,
 
 ## What we are doing
 
-We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and two positions on that devnet. The second one stepped twice, and the redeem paid the second quote. On 4 Nov 2026 a covenant on that devnet paid a promise of 100000000 sompi. The count was chosen once. The promise moves when KAS moves. The short extract of the position, the promise, and the 3 Nov page reading is [FINDINGS.md](FINDINGS.md).
+We are testing a unit that can sit on Kaspa. The unit should be as hard to rewrite as the chain that orders it. Nobody should be able to freeze it. The miners who secure the chain should keep being paid in KAS. The tests stay on this desk: integer checks, a short public testnet sample, a private devnet, a `peg.sil` redeem on that devnet, a DAA wait of 8, and two positions on that devnet. The second one stepped twice, and the redeem paid the second quote. On 4 Nov 2026 a covenant on that devnet paid a promise of 100000000 sompi. The count was chosen once. The promise moves when KAS moves. On 5 Nov 2026 a different contract let that bearer name the next one. The count stayed 100000000. The next bearer is the address that mines this devnet, and the claim paid that address in an ordinary output. `promise.sil` still cannot change its bearer. The short extract, and the handoff under it, is [FINDINGS.md](FINDINGS.md).
 
 ## Why
 
@@ -38,6 +38,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 4 Nov 2026 | These notes, no new chain | [A promise counted in sompi. It is chosen once. No quote, no step, and no coinbase face. The model passed. It was not broadcast.](STUDY.md#the-fixed-promise-4-nov-2026) |
 | 4 Nov 2026 | The same half-split devnet, localhost only | [A promise of 100000000 sompi was paid to the bearer. A rewrite of that count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-promise-on-the-node-4-nov-2026) |
 | 5 Nov 2026 | These notes, no new chain | [A short extract of the position, the promise, and the 3 Nov page reading. SilverScript v1.0.0 emitted the same bytecode. No new covenant.](FINDINGS.md) |
+| 5 Nov 2026 | The same half-split devnet, localhost only | [The bearer handed the same promise of 100000000 sompi to the mining address. A doubled count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -52,6 +53,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - Kaspa Dollar's covenants are unpublished, and the five times on their pages do not name a clock. The DAA wait of 8 was accepted twice. The one-entry form was rejected, and the node did not name the line. Their page still prices a window at half of its blocks, so the attack there can be a quarter of hashrate. The position's model asks for a window where that attack is half of hashrate. This desk is the only miner, so that gate was not mined. [Their hours.](STUDY.md#their-hours-read-on-3-nov-2026)
 - Acceptance was not waited out to finality depth. A failed script comes back as one sentence.
 - The fixed promise was paid once. The bearer received 100000000 sompi from a lock of 200000000. A rewrite of the count was rejected. A withdraw that would have left less than the promise was rejected. A claim that paid 50000000 was rejected. The chain script requires a surplus above zero, so a lock equal to the promise was not this broadcast. The model still allows that equal case. The promise moves when KAS moves. Finality was not waited. [The promise on the node.](STUDY.md#the-promise-on-the-node-4-nov-2026)
+- `promise.sil` still names one bearer. `promise-pass.sil` let that bearer name the next one. The count stayed 100000000 and the lock stayed 200000000 until the claim. The next bearer is the address that mines this devnet. The payment was an ordinary output. A version-1 transaction id does not cover the signature, so the rejected locker signature and the included pass share one id. Finality was not waited. [The bearer handed the promise.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026)
 
 ## Shapes
 
@@ -66,6 +68,7 @@ These are different promises. None of them has been chosen. [The doors, side by 
 - A rollup puts a sequencer back in front of the payments. Refused as an ordering design.
 - The position is the practice this desk would keep while every shape above stays. One person locks KAS they already hold. The miner is paid the full KAS reward. There is no company, no shared pot, no freeze, and no coinbase split. The quote may move by one step, from three quarters through four thirds, and only after a DAA wait. Redeem pays the quote that was stored. A second covenant on the same devnet stepped once more, from 400000000 to 533333333, and the redeem paid that quote. [The position, 3 Nov 2026.](STUDY.md#the-position-3-nov-2026) [A second step, 3 Nov 2026.](STUDY.md#a-second-step-3-nov-2026)
 - The fixed promise was broadcast once on the same private devnet. The count is sompi, chosen once, with no quote and no step. The bearer was paid 100000000. It does not replace the position. [The promise on the node, 4 Nov 2026.](STUDY.md#the-promise-on-the-node-4-nov-2026)
+- A second file, `promise-pass.sil`, was broadcast once. The bearer named a next bearer. The sompi count stayed. It does not replace `promise.sil`, and `promise.sil` still cannot change its bearer. [The bearer handed the promise, 5 Nov 2026.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026)
 
 ## Pushback
 
@@ -84,7 +87,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract. The long notes stay as they were written |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the promise paid on 4 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the handoff on 5 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |

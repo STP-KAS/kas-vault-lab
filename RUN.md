@@ -35,6 +35,8 @@ cli-debugger contracts/vault.sil --run-all
 
 `node script/devnet-promise.mjs` talks to the same half-split port and refuses any other network. While its phase file says claimed, it prints the recorded claim and returns. It does not open another promise, and it does not spend `peg.sil`, `position.sil`, or the clocks. `--compile` prints the bytecode length and does not submit. The fee floor is 5000000 sompi.
 
+`node script/devnet-promise-pass.mjs` talks to the same half-split port and refuses any other network. It compiles `contracts/promise-pass.sil`. While its own phase file says claimed, it prints the recorded claim and returns. It does not open another handoff, and it does not spend `promise.sil`, `peg.sil`, `position.sil`, or the clocks. `--compile` prints the bytecode length and does not submit. The fee floor is 5000000 sompi. The new bearer is the address that mines this devnet.
+
 ## The 27 Oct lab
 
 TN10 learning lab. A covenant locks test Kaspa and lets its owner mint and burn a test token named tUSD-TEST. The token is worthless. This is not a stablecoin, not a product, and not money.
