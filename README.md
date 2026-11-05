@@ -86,7 +86,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 
 | File | What it is |
 | --- | --- |
-| [FINDINGS.md](FINDINGS.md) | The short extract. The long notes stay as they were written |
+| [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
 | [STUDY.md](STUDY.md) | The argument, from 1 Nov through the handoff on 5 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
@@ -97,6 +97,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | [contracts/peg.sil](contracts/peg.sil) | Holder redeem at the stored quote |
 | [contracts/position.sil](contracts/position.sil) | One lock, one capped step, the full KAS reward |
 | [contracts/promise.sil](contracts/promise.sil) | One lock, one sompi promise, no quote |
+| [contracts/promise-pass.sil](contracts/promise-pass.sil) | The bearer names the next bearer. The count stays |
 | [model/promise.mjs](model/promise.mjs) | The same integers. The model still allows a surplus of zero |
 | [contracts/vault.sil](contracts/vault.sil) | The 27 Oct vault. Unchanged |
 | [RUN.md](RUN.md) | Commands for this desk. Not a public run. |
