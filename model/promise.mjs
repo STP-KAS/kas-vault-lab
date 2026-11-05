@@ -31,9 +31,16 @@ export function afterWithdraw(locked, promise, take) {
 }
 
 // The bearer takes the promise. The surplus goes back to the locker.
+// An equal lock returns a surplus of 0. The chain entry does not.
 export function claimPays(locked, promise) {
   if (!openAllows(locked, promise)) throw new Error("bad claim");
   return { pay: promise, surplus: locked - promise };
+}
+
+// contracts/promise.sil requires the lock to be greater than the promise.
+export function chainClaimAllows(locked, promise) {
+  if (!openAllows(locked, promise)) return false;
+  return locked > promise;
 }
 
 export function samePromise(promise, next) {

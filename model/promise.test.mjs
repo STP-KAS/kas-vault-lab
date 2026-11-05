@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   afterAdd,
   afterWithdraw,
+  chainClaimAllows,
   claimPays,
   feeStaysOut,
   openAllows,
@@ -41,4 +42,10 @@ test("the bearer is paid the promise and the surplus goes back", () => {
   assert.deepEqual(claimPays(LOCK, LOCK), { pay: LOCK, surplus: 0 });
   assert.equal(feeStaysOut(LOCK, PROMISE), true);
   assert.throws(() => claimPays(LOCK, LOCK + 1), /bad claim/);
+});
+
+test("the chain claim requires a surplus and the model still allows zero", () => {
+  assert.equal(chainClaimAllows(LOCK, PROMISE), true);
+  assert.equal(chainClaimAllows(LOCK, LOCK), false);
+  assert.deepEqual(claimPays(LOCK, LOCK), { pay: LOCK, surplus: 0 });
 });
