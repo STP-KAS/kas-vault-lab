@@ -264,6 +264,29 @@ export function bandForfeitSompi(attackerVotes, honestVotes, perVoteHaircut) {
   return BigInt(attackerVotes) * BigInt(perVoteHaircut);
 }
 
+// Greatest integer whose square is <= n.
+export function isqrt(n) {
+  if (typeof n !== "bigint" || n < 0n) throw new Error("bad square");
+  if (n < 2n) return n;
+  let x = n;
+  let y = (x + 1n) / 2n;
+  while (y < x) {
+    x = y;
+    y = (x + n / x) / 2n;
+  }
+  return x;
+}
+
+// Floor of the binomial spread, in blocks, when each block is won with shareBps.
+// One winner per block. A flood of parallel headers is a different picture.
+export function blockSpread(blocks, shareBps) {
+  if (!Number.isInteger(blocks) || blocks < 0) throw new Error("bad blocks");
+  if (!Number.isInteger(shareBps) || shareBps < 0 || shareBps > 10_000) throw new Error("bad share");
+  const numer = BigInt(blocks) * BigInt(shareBps) * BigInt(10_000 - shareBps);
+  const den = 100_000_000n;
+  return Number(isqrt(numer / den));
+}
+
 // Attacker hashrate, in bps of the network, needed to be half the votes.
 // A participation below 5000 bps has no price, so the attacker share is null.
 export function minAttackerBps(participationBps) {

@@ -103,3 +103,9 @@ BIP 100's 2016 blocks are 14 days on Bitcoin and 201600 milliseconds at 10 block
 No node was started. No new devnet was started. No contract was edited. The subsidy table was not edited. SchellingCoin's 28 March 2014 note says an entity with more than half the votes can set the median, and that cryptography does not know the temperature in Berlin. Liquity's oracle page still requires an ETH price. The promise remains a count of sompi.
 
 This is a study. We are not claiming a stablecoin.
+
+## Home ASICs, asked on 6 Nov 2026
+
+Four or five home ASICs on a private devnet would still be one operator. `blockSpread(6000, 2000)` is 30 blocks. A fifth of that window is 1200, and 1200 plus 30 stays under the thin-window tie of 1500. Two fifths are 2400, and the spread of 37 leaves them above 1500. The spread assumes one winner per block. An ASIC does not wait for the driver. A stratum bridge would be this desk writing the payload. No pool setting was changed. No ASIC was pointed anywhere. The command passed 59 tests and printed 0 failures. The 58 stays in the section above.
+
+This is a study. We are not claiming a stablecoin.

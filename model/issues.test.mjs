@@ -32,6 +32,7 @@ import {
   coalitionBlocks,
   coalitionSompi,
   bandForfeitSompi,
+  blockSpread,
   cappedFall,
   daaSpan,
   signerWindowAllows,
@@ -471,4 +472,17 @@ test("a one percent haircut does not buy the median, and 2016 blocks is a short 
   const fullHonest = 6_000 - tie;
   assert.equal(votesMoveMedian(tie, fullHonest), false);
   assert.equal(bandForfeitSompi(tie, fullHonest, pay.haircut), BigInt(tie) * BigInt(pay.haircut));
+});
+
+test("one fifth of a thin window does not reach the median by noise", () => {
+  assert.equal(coalitionBlocks(6_000, 2_000), 1_200);
+  assert.equal(blockSpread(6_000, 2_000), 30);
+  assert.equal(30 * 30, 900);
+  assert.equal(31 * 31, 961);
+  assert.ok(1_200 + 30 < 1_500);
+  assert.equal(coalitionBlocks(6_000, 4_000), 2_400);
+  assert.equal(blockSpread(6_000, 4_000), 37);
+  assert.ok(2_400 - 37 > 1_500);
+  assert.equal(blockSpread(6_000, 2_500), 33);
+  assert.equal(blockSpread(6_000, 7_500), 33);
 });

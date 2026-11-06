@@ -42,6 +42,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 5 Nov 2026 | These notes, no new chain | [The constructor integers, and a model of the handoff. No new covenant.](STUDY.md#the-handoff-integers-5-nov-2026) |
 | 6 Nov 2026 | These notes, no new chain | [SchellingCoin, BIP 100, and why this desk does not build that oracle.](STUDY.md#the-oracle-he-named-6-nov-2026) |
 | 6 Nov 2026 | These notes, no new chain | [A one percent cut, and the wall clock of a five percent step.](STUDY.md#the-brake-and-the-haircut-6-nov-2026) |
+| 6 Nov 2026 | These notes, no new chain | [Home ASICs stay on their current work. One house is one voter.](STUDY.md#home-asics-asked-on-6-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -62,6 +63,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - A pass to the same bearer, and a lock equal to the promise, were not broadcast on `promise-pass.sil`. The script already refuses the same bearer. The file has no withdraw, so a rejected equal-lock claim would leave the sompi in the covenant. The model refuses both. The chain was not asked.
 - The oracle named on 6 Nov 2026 was not built here. BIP 100 moves on 1512 of 2016 votes, and by at most 5 percent. The thin window already recorded still moves on a quarter of the hashrate. A coinbase price is not a change to the hash. [The oracle he named.](STUDY.md#the-oracle-he-named-6-nov-2026)
 - A cut of 100 basis points leaves the finder 4356000000 sompi of a 4400000000 subsidy. The sompi share stays the block share. A band around the median charges nothing to the coalition that sets it. Fifteen steps of 5 percent on 2016 blocks at 10 a second are 3024 seconds of calculation. The same fifteen steps on a 12096000-block period are 210 days. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
+- Four or five home ASICs were not pointed at a devnet. A fifth of a 6000-block window is 1200 blocks, and the spread is 30. That stays under the thin-window tie of 1500. The machines stay on their current work. [Home ASICs, asked on 6 Nov 2026.](STUDY.md#home-asics-asked-on-6-nov-2026)
 
 ## Shapes
 
@@ -97,7 +99,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the brake and the haircut on 6 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the home ASICs asked on 6 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |

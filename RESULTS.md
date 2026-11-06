@@ -339,3 +339,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No new devnet was started. No wallet was spent. `contracts/promise.sil`, `contracts/promise-pass.sil`, `contracts/position.sil`, and `contracts/peg.sil` were not edited. The phase files were not reset. The subsidy table was not edited. `subsidyAfterCut(4400000000, 100)` cuts 44000000 sompi and leaves 4356000000. `stepsToBound(1000000, 2000000, 105, 100)` returns 15 steps and 2078921. `daaSpan(1209600, 10)` is 12096000. The command named in `STUDY.md` passed 58 tests. The runner printed 0 failures. The 57 passes in the oracle section stay there.
 
 **Reasoning.** These are model answers. They are not a coinbase vote and they are not a new covenant. This is a study. We are not claiming a stablecoin.
+
+## Home ASICs, asked on 6 Nov 2026
+
+**Fact.** No ASIC was pointed anywhere. No pool setting was read or changed. No worker was named. No bridge was started. No node was started. `blockSpread(6000, 2000)` is 30. `blockSpread(6000, 4000)` is 37. The command named in `STUDY.md` passed 59 tests. The runner printed 0 failures. The 58 passes in the brake section stay there.
+
+**Reasoning.** The plan is to leave the machines on their current work. This is a study. We are not claiming a stablecoin.
