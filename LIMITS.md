@@ -85,3 +85,7 @@ The paragraphs above describe `contracts/vault.sil`. They stay. `contracts/peg.s
 ## The bearer can be named, 5 Nov 2026
 
 **Fact.** `promise.sil` still cannot change its bearer. `contracts/promise-pass.sil` was compiled and broadcast on the same half-split devnet. The current bearer named the next bearer. The lock stayed 200000000 sompi and the promise stayed 100000000. The claim paid the next bearer 100000000 and returned 100000000 to the locker. The next bearer is the address that mines this devnet. The payment is an ordinary output. The fee was another coin. The locked half stayed 2200000000 and still does not pay. A doubled promise was rejected. The count does not track an outside unit. The ids are in `RESULTS.md`. Finality was not waited. The quote on `peg.sil` and `position.sil` is still a key.
+
+## A cut does not price the outside, 6 Nov 2026
+
+**Fact.** `subsidyAfterCut(4400000000, 100)` leaves the finder 4356000000 sompi. The cut is 44000000. A band around the median charges nothing to the coalition that the median already follows. Fifteen steps of a 5 percent floor, on 2016 blocks at 10 a second, are 3024 seconds of calculation. The closed text applies that limit to the next period. The same fifteen steps on a period of 12096000 blocks are 210 days. A coalition with 7500 basis points of hashrate is inside that median. The promise remains a count of sompi. No script in this pass commits a price, a cut, or a vote. The ids above were not submitted again.

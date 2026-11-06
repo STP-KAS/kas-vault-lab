@@ -31,3 +31,5 @@ Each item says whether it restates a file or adds a judgment.
 13. **Fact, then the same restraint.** `position.sil` and `promise-pass.sil` are in this repo. Do not add a square button for either. Do not describe them as a rail, as a freeze, or as a cut in the subsidy. The square's rails stay `kas`, `poc`, and `kusdt`.
 
 14. **Fact, then the same restraint.** A coinbase price was named on 6 Nov 2026 as an oracle for more than one product. Do not add a square button for it. Do not describe that payload as useful work, as a second coin, or as a cut in the subsidy. The square's rails stay `kas`, `poc`, and `kusdt`.
+
+15. **Fact, then the same restraint.** A cut of 100 basis points of the month-0 subsidy was measured in the model on 6 Nov 2026. The finder keeps 4356000000 sompi of 4400000000. The cut does not buy the median. Do not add a square button for it. Do not describe it as a public rule. The square's rails stay `kas`, `poc`, and `kusdt`.

@@ -192,3 +192,9 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 ## A second income, named on 6 Nov 2026
 
 **Fact.** The posts are in `STUDY.md`. BIP 100 changes a block-size limit. It does not pay a second income. The fee beside the subsidy is the 3 Nov reading, and the amount is still blank. `bip100Next` does not pay anyone. The block reward in this study stays the full KAS reward. The command on 6 Nov passed 57 tests. The 56 stays in the section above.
+
+## A small cut, measured on 6 Nov 2026
+
+**Fact.** `subsidyAfterCut(4400000000, 100)` returns a cut of 44000000 sompi and a keep of 4356000000. The cut does not exceed the keep. At 5000 basis points the two sides are equal. A cut taken from every block leaves 1500 of 6000 blocks with 2500 basis points of the sompi, and 1512 of 2016 blocks with 7500 basis points of the sompi. The cuts on those blocks, and on 9072000 of 12096000, are 66000000000, 66528000000, and 399168000000000 sompi. The keep on each window is 99 times the cut. `bandForfeitSompi(1500, 1500, 44000000)` is 0. The same function on 1512 against 504 is 0. The same function on 1500 against 4500 is 66000000000. The subsidy table was not edited. No coinbase output was changed. The command passed 58 tests. The 57 stays in the section above.
+
+**Reasoning.** A band around the median does not charge the coalition that became the median. A small cut taken from every miner shrinks the reward and leaves the hashrate share where it was. Neither one buys a price. The full-reward sentences in the earlier sections stay there. This is a study. We are not claiming a stablecoin.

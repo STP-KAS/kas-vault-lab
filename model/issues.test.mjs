@@ -26,6 +26,12 @@ import {
   minAttackerBps,
   BIP100_PERIOD,
   bip100Next,
+  floorScale,
+  stepsToBound,
+  subsidyAfterCut,
+  coalitionBlocks,
+  coalitionSompi,
+  bandForfeitSompi,
   cappedFall,
   daaSpan,
   signerWindowAllows,
@@ -382,4 +388,87 @@ test("the halt and the settlement use the same age", () => {
   assert.equal(ageAllows(settle, halt, settle, "mint"), false);
   assert.equal(ageAllows(settle, halt, settle, "liquidate"), false);
   assert.equal(ageAllows(0, halt, settle, "settle"), false);
+});
+
+test("a one percent haircut does not buy the median, and 2016 blocks is a short brake", () => {
+  const month0 = 4_400_000_000;
+  const pay = subsidyAfterCut(month0, 100);
+  assert.equal(pay.haircut, 44_000_000);
+  assert.equal(pay.keep, 4_356_000_000);
+  assert.equal(pay.cutExceedsKeep, false);
+  assert.equal(pay.keep, pay.haircut * 99);
+  const even = subsidyAfterCut(month0, 5_000);
+  assert.equal(even.haircut, even.keep);
+  assert.equal(even.cutExceedsKeep, false);
+  assert.equal(subsidyAfterCut(month0, 5_001).cutExceedsKeep, true);
+
+  assert.equal(floorScale(1_000_000, 105, 100), 1_050_000);
+  assert.equal(floorScale(1_000_000, 100, 105), Math.floor((1_000_000 * 100) / 105));
+  assert.equal(floorScale(19, 105, 100), 19);
+  assert.equal(stepsToBound(19, 20, 105, 100), null);
+  assert.equal(floorScale(20, 105, 100), 21);
+
+  const doubled = stepsToBound(1_000_000, 2_000_000, 105, 100);
+  assert.equal(doubled.steps, 15);
+  assert.equal(doubled.reached, 2_078_921);
+  let level = 1_000_000;
+  for (let i = 0; i < 14; i += 1) level = floorScale(level, 105, 100);
+  assert.ok(level < 2_000_000);
+  assert.equal(floorScale(level, 105, 100), 2_078_921);
+
+  const halved = stepsToBound(1_000_000, 500_000, 100, 105);
+  assert.equal(halved.steps, 15);
+  assert.equal(halved.reached, 481_012);
+  let fallen = 1_000_000;
+  for (let i = 0; i < 14; i += 1) fallen = floorScale(fallen, 100, 105);
+  assert.ok(fallen > 500_000);
+
+  const hourly = stepsToBound(1_000_000, 2_000_000, 110, 100);
+  assert.equal(hourly.steps, 8);
+  assert.equal(hourly.reached, 2_143_588);
+
+  const bitcoinPeriodSeconds = BIP100_PERIOD * 600;
+  assert.equal(bitcoinPeriodSeconds, 1_209_600);
+  const kaspaPeriodMs = (BIP100_PERIOD * 1000) / 10;
+  assert.equal(kaspaPeriodMs, 201_600);
+  assert.equal((bitcoinPeriodSeconds * 1000) / kaspaPeriodMs, 6_000);
+  const stretched = daaSpan(bitcoinPeriodSeconds, 10);
+  assert.equal(stretched, 12_096_000);
+  assert.equal(doubled.steps * BIP100_PERIOD, 30_240);
+  assert.equal(doubled.steps * kaspaPeriodMs, 3_024_000);
+  assert.equal(doubled.steps * 14, 210);
+  assert.equal(doubled.steps * stretched, 181_440_000);
+  assert.equal(hourly.steps * daaSpan(60 * 60, 10), 288_000);
+
+  assert.equal(coalitionBlocks(6_000, minAttackerBps(5_000)), 1_500);
+  assert.equal(coalitionBlocks(BIP100_PERIOD, 7_500), 1_512);
+  assert.equal(coalitionBlocks(stretched, 7_500), 9_072_000);
+
+  const thinHair = coalitionSompi(6_000, 2_500, pay.haircut);
+  const thinKeep = coalitionSompi(6_000, 2_500, pay.keep);
+  assert.equal(thinHair.found, 1_500);
+  assert.equal(thinHair.sompi, 66_000_000_000n);
+  assert.equal(thinKeep.sompi, thinHair.sompi * 99n);
+  const allThin = BigInt(6_000) * BigInt(pay.keep);
+  assert.equal(thinKeep.sompi * 10_000n, allThin * 2_500n);
+
+  const bipHair = coalitionSompi(BIP100_PERIOD, 7_500, pay.haircut);
+  assert.equal(bipHair.sompi, 66_528_000_000n);
+  const bipKeep = coalitionSompi(BIP100_PERIOD, 7_500, pay.keep);
+  assert.equal(bipKeep.sompi, bipHair.sompi * 99n);
+  const allBip = BigInt(BIP100_PERIOD) * BigInt(pay.keep);
+  assert.equal(bipKeep.sompi * 10_000n, allBip * 7_500n);
+
+  const longHair = coalitionSompi(stretched, 7_500, pay.haircut);
+  assert.equal(longHair.found, 9_072_000);
+  assert.equal(longHair.sompi, 399_168_000_000_000n);
+  const longKeep = coalitionSompi(stretched, 7_500, pay.keep);
+  assert.equal(longKeep.sompi, longHair.sompi * 99n);
+
+  const tie = coalitionBlocks(6_000, 2_500);
+  assert.equal(bandForfeitSompi(tie, tie, pay.haircut), 0n);
+  assert.equal(bandForfeitSompi(1_512, 504, pay.haircut), 0n);
+  const fullHonest = 6_000 - tie;
+  assert.equal(votesMoveMedian(tie, fullHonest), false);
+  assert.equal(bandForfeitSompi(tie, fullHonest, pay.haircut), BigInt(tie) * BigInt(pay.haircut));
 });

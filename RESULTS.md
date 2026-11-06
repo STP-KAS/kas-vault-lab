@@ -333,3 +333,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** A same-bearer pass was not broadcast. An equal lock was not broadcast. `promise-pass.sil` has no withdraw, so a rejected claim would leave the sompi in the covenant. The previous bearer's claim remains `a4717649bd49b02f001bf0ff0e7a24bfff196d62d722a920eaf5b7b75e4843ac`. It was not submitted again.
 
 **Reasoning.** These are the driver's arguments and the model's answers. They are not a new covenant. This is a study. We are not claiming a stablecoin.
+
+## The brake and the haircut, 6 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No new devnet was started. No wallet was spent. `contracts/promise.sil`, `contracts/promise-pass.sil`, `contracts/position.sil`, and `contracts/peg.sil` were not edited. The phase files were not reset. The subsidy table was not edited. `subsidyAfterCut(4400000000, 100)` cuts 44000000 sompi and leaves 4356000000. `stepsToBound(1000000, 2000000, 105, 100)` returns 15 steps and 2078921. `daaSpan(1209600, 10)` is 12096000. The command named in `STUDY.md` passed 58 tests. The runner printed 0 failures. The 57 passes in the oracle section stay there.
+
+**Reasoning.** These are model answers. They are not a coinbase vote and they are not a new covenant. This is a study. We are not claiming a stablecoin.

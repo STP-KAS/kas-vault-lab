@@ -202,6 +202,68 @@ export function bip100Next(votes, current) {
   return current;
 }
 
+// floor(current * num / den), in integers. The closed BIP 100 caps are 105/100 and 100/105.
+export function floorScale(current, num, den) {
+  if (!Number.isInteger(current) || current <= 0) throw new Error("bad level");
+  if (!Number.isInteger(num) || !Number.isInteger(den) || num <= 0 || den <= 0) throw new Error("bad scale");
+  const next = (BigInt(current) * BigInt(num)) / BigInt(den);
+  if (next > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("level too large");
+  return Number(next);
+}
+
+// How many floors until the integer crosses bound. Null when a floor stalls.
+export function stepsToBound(start, bound, num, den) {
+  if (!Number.isInteger(start) || !Number.isInteger(bound) || start <= 0 || bound <= 0) throw new Error("bad walk");
+  if (bound === start) return { steps: 0, reached: start };
+  const rising = bound > start;
+  let current = start;
+  let steps = 0;
+  while (rising ? current < bound : current > bound) {
+    const next = floorScale(current, num, den);
+    if (rising ? next <= current : next >= current) return null;
+    current = next;
+    steps += 1;
+    if (steps > 100_000) throw new Error("walk too long");
+  }
+  return { steps, reached: current };
+}
+
+// A finder who is cut keeps the subsidy minus the haircut. The haircut is not returned.
+export function subsidyAfterCut(subsidy, haircutBps) {
+  if (!Number.isInteger(subsidy) || subsidy < 0) throw new Error("bad subsidy");
+  if (!Number.isInteger(haircutBps) || haircutBps < 0 || haircutBps > 10_000) throw new Error("bad haircut");
+  const haircut = Number((BigInt(subsidy) * BigInt(haircutBps)) / 10_000n);
+  const keep = subsidy - haircut;
+  return { haircut, keep, cutExceedsKeep: haircut > keep };
+}
+
+// Blocks a hashrate share finds, rounded down.
+export function coalitionBlocks(blocks, attackerBps) {
+  if (!Number.isInteger(blocks) || blocks < 0) throw new Error("bad blocks");
+  if (!Number.isInteger(attackerBps) || attackerBps < 0 || attackerBps > 10_000) throw new Error("bad share");
+  const found = (BigInt(blocks) * BigInt(attackerBps)) / 10_000n;
+  if (found > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("blocks too large");
+  return Number(found);
+}
+
+// Sompi across those blocks. BigInt, because a long period leaves the safe integer range.
+export function coalitionSompi(blocks, attackerBps, perBlock) {
+  if (!Number.isInteger(perBlock) || perBlock < 0) throw new Error("bad pay");
+  const found = coalitionBlocks(blocks, attackerBps);
+  return { found, sompi: BigInt(found) * BigInt(perBlock) };
+}
+
+// A band around the median pays whoever the median is. votesMoveMedian is that test.
+// The coalition that meets it forfeits nothing. Buterin's 28 Mar 2014 text says
+// more than half the votes set the median. The tie here is the study's existing one.
+export function bandForfeitSompi(attackerVotes, honestVotes, perVoteHaircut) {
+  if (!Number.isInteger(attackerVotes) || !Number.isInteger(honestVotes)) throw new Error("bad votes");
+  if (!Number.isInteger(perVoteHaircut) || perVoteHaircut < 0) throw new Error("bad haircut");
+  if (attackerVotes < 0 || honestVotes < 0 || attackerVotes + honestVotes === 0) throw new Error("bad votes");
+  if (votesMoveMedian(attackerVotes, honestVotes)) return 0n;
+  return BigInt(attackerVotes) * BigInt(perVoteHaircut);
+}
+
 // Attacker hashrate, in bps of the network, needed to be half the votes.
 // A participation below 5000 bps has no price, so the attacker share is null.
 export function minAttackerBps(participationBps) {

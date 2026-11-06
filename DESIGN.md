@@ -142,3 +142,7 @@ Positive mint, seal, withdraw, and liquidate still need a real transaction signa
 **Fact.** The debugger paragraph above describes `contracts/ratio.test.json` and `contracts/vault.test.json`. Those fixtures are not TN10 broadcasts. The 27 Oct driver stopped while asking for test coins. That day has no vault transaction id. Later ids are the peg redeems, the position redeems, the promise claim, and the handoff claim. They are in `RESULTS.md`.
 
 **Fact.** The sources after that morning are `contracts/position.sil`, `contracts/promise.sil`, and `contracts/promise-pass.sil`. `vault.sil` remains the 27 Oct instrument. `peg.sil` remains the quote. The position constructor in `script/devnet-position.mjs` passes 25000, 20000, and 500. `policy` checks the liquidation line and the bonus. No entry spends them. `peg.sil` was not given those numbers. The handoff model is `model/promise-pass.mjs`. The count is in `STUDY.md`.
+
+## No new contract, 6 Nov 2026
+
+**Fact.** The brake and the haircut are functions in `model/issues.mjs`. They do not compile to a script. They do not add an entry to `position.sil`, `peg.sil`, `promise.sil`, or `promise-pass.sil`. The subsidy table was not edited. The count of tests is in `STUDY.md`.

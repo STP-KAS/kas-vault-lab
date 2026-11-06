@@ -93,3 +93,13 @@ On 6 Nov 2026 the posts say the oracle is his own design, inspired by SchellingC
 The oracle was not built. This desk is the only miner on the private devnet. A payload does not make the hash useful work. The second income, as read on 3 Nov, is a fee beside the subsidy, and the amount is still unpublished. The pages were not read again.
 
 This is a study. We are not claiming a stablecoin.
+
+## The brake and the haircut, 6 Nov 2026
+
+A cut of 100 basis points of the month-0 subsidy of 4400000000 sompi is 44000000. The finder keeps 4356000000. The cut does not exceed the keep. A cut taken from every block leaves the sompi share equal to the block share. `bandForfeitSompi` is 0 when the coalition has at least as many votes as the other side, which is the tie `votesMoveMedian` already counts as a move. 1500 against 1500, inside a window of 6000, forfeits nothing.
+
+BIP 100's 2016 blocks are 14 days on Bitcoin and 201600 milliseconds at 10 blocks a second, 6000 times shorter. Fifteen steps of the 5 percent floor take 1000000 to 2078921, past 2000000. On Kaspa blocks that is 30240 blocks and 3024 seconds of calculation. The closed text applies the new limit to the next period. The same fifteen steps across 12096000-block periods are 181440000 blocks and 210 days. The 10 percent hourly cap takes 8 steps to pass 2000000, which is 288000 blocks. The command passed 58 tests and printed 0 failures. The 57 stays in the section above.
+
+No node was started. No new devnet was started. No contract was edited. The subsidy table was not edited. SchellingCoin's 28 March 2014 note says an entity with more than half the votes can set the median, and that cryptography does not know the temperature in Berlin. Liquity's oracle page still requires an ETH price. The promise remains a count of sompi.
+
+This is a study. We are not claiming a stablecoin.

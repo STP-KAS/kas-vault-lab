@@ -41,6 +41,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 5 Nov 2026 | The same half-split devnet, localhost only | [The bearer handed the same promise of 100000000 sompi to the mining address. A doubled count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026) |
 | 5 Nov 2026 | These notes, no new chain | [The constructor integers, and a model of the handoff. No new covenant.](STUDY.md#the-handoff-integers-5-nov-2026) |
 | 6 Nov 2026 | These notes, no new chain | [SchellingCoin, BIP 100, and why this desk does not build that oracle.](STUDY.md#the-oracle-he-named-6-nov-2026) |
+| 6 Nov 2026 | These notes, no new chain | [A one percent cut, and the wall clock of a five percent step.](STUDY.md#the-brake-and-the-haircut-6-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -60,6 +61,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - The local calculator accepted 2000000 sompi on `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`. The node required 3784000 for transient mass 37840. The position driver now starts at 5000000. That floor is the driver's number. It is not a measurement that the calculator matches the node.
 - A pass to the same bearer, and a lock equal to the promise, were not broadcast on `promise-pass.sil`. The script already refuses the same bearer. The file has no withdraw, so a rejected equal-lock claim would leave the sompi in the covenant. The model refuses both. The chain was not asked.
 - The oracle named on 6 Nov 2026 was not built here. BIP 100 moves on 1512 of 2016 votes, and by at most 5 percent. The thin window already recorded still moves on a quarter of the hashrate. A coinbase price is not a change to the hash. [The oracle he named.](STUDY.md#the-oracle-he-named-6-nov-2026)
+- A cut of 100 basis points leaves the finder 4356000000 sompi of a 4400000000 subsidy. The sompi share stays the block share. A band around the median charges nothing to the coalition that sets it. Fifteen steps of 5 percent on 2016 blocks at 10 a second are 3024 seconds of calculation. The same fifteen steps on a 12096000-block period are 210 days. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
 
 ## Shapes
 
@@ -75,6 +77,7 @@ These are different promises. None of them has been chosen. [The doors, side by 
 - The position is the practice this desk would keep while every shape above stays. One person locks KAS they already hold. The miner is paid the full KAS reward. There is no company, no shared pot, no freeze, and no coinbase split. The quote may move by one step, from three quarters through four thirds, and only after a DAA wait. Redeem pays the quote that was stored. A second covenant on the same devnet stepped once more, from 400000000 to 533333333, and the redeem paid that quote. [The position, 3 Nov 2026.](STUDY.md#the-position-3-nov-2026) [A second step, 3 Nov 2026.](STUDY.md#a-second-step-3-nov-2026)
 - The fixed promise was broadcast once on the same private devnet. The count is sompi, chosen once, with no quote and no step. The bearer was paid 100000000. It does not replace the position. [The promise on the node, 4 Nov 2026.](STUDY.md#the-promise-on-the-node-4-nov-2026)
 - A second file, `promise-pass.sil`, was broadcast once. The bearer named a next bearer. The sompi count stayed. It does not replace `promise.sil`, and `promise.sil` still cannot change its bearer. [The bearer handed the promise, 5 Nov 2026.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026)
+- A miner median with a cut of the subsidy was measured as integers. The cut does not buy the median. It was not built, and it is not a rail. [The brake and the haircut, 6 Nov 2026.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
 
 ## Pushback
 
@@ -85,6 +88,7 @@ Some earlier sentences were wrong, or too final. The ones that still change how 
 - "A hashrate majority" is the case where every block votes. At the thinnest window their page prices, half of the votes is a quarter of hashrate. The position's model refuses a price until half of the votes is at least half of hashrate. One block that does not vote then leaves no price. That rule was checked in the model. It was not mined. [The doors.](DOORS.md#two-powers)
 - The five times were treated as a mechanism the page had already chosen. The page names the intervals and leaves the clock blank. On the evening read, the uncapped-decrease bullet and the fall-cap sentences were both still there. The position uses one band in both directions. The page has not chosen that band.
 - A four-thirds body at a fee of 2000000 sompi, `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`, was rejected because the fee was under 3784000 for transient mass 37840. The local calculator had accepted 2000000. The included body is the step above, at a fee of 5000000.
+- A small cut of the miner reward was measured on 6 Nov 2026. One hundred basis points of 4400000000 sompi is 44000000. The finder keeps the rest. The hashrate share is unchanged when every block is cut the same way. The band around the median does not charge the coalition that sets the median. The earlier sentences that keep the full KAS reward stay in their sections. The subsidy table was not edited. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
 
 The settled lines, including the block-count field, the balance reader, and the five percent run, are in [Pushback, kept on 3 Nov 2026](STUDY.md#pushback-kept-on-3-nov-2026).
 
@@ -93,7 +97,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the oracle named on 6 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the brake and the haircut on 6 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |
