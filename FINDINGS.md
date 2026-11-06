@@ -113,3 +113,7 @@ This is a study. We are not claiming a stablecoin.
 ## His review of fd0b3eb, 6 Nov 2026
 
 The review is an opinion of commit `fd0b3eb9fe5eec27d9a1b20a1876df6a71eb6a86`. It is not a work order. The repository was left unchanged. The distance from 1200 blocks to the thin-window tie of 1500 is about 9.68 standard deviations, and 30 is one floored deviation. A fifth of the window, 1200 blocks, can be half the votes only when the voting total is at most 2400, and a priced window of 6000 blocks asks for 3000 votes. The review wrote `440000000` where the recorded per-block haircut is `44000000`. A tie returns 0 at either figure. `fits` stays true while a quote key is set. `clock.sil` `prove` and `clock-probe.sil` `full` call the same four checks, and this pass did not compile them. The 59 stays in the section above. The review's opinion matches the brake note: the claim the script can keep is a count of sompi.
+
+## Kaspa only, 6 Nov 2026
+
+The study follows Kaspa. A page about an oracle on another chain is not an input. A fifth of a 6000-block window is 1200 blocks. Twice that is 2400, and a priced window asks for 3000. Nine spreads of 30 leave 1470, still under 1500. Ten land on 1500. A quarter of hashrate, 1500 against 1500, is the thin-window tie and the smallest voting total that prices the window. A new devnet was not started. The command passed 60 tests and printed 0 failures. The 59 stays in the section above.

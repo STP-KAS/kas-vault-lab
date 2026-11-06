@@ -44,6 +44,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 6 Nov 2026 | These notes, no new chain | [A one percent cut, and the wall clock of a five percent step.](STUDY.md#the-brake-and-the-haircut-6-nov-2026) |
 | 6 Nov 2026 | These notes, no new chain | [Home ASICs stay on their current work. One house is one voter.](STUDY.md#home-asics-asked-on-6-nov-2026) |
 | 6 Nov 2026 | These notes, no new chain | [A review of that commit. The spread of 30 is one floored deviation. The claim the script can keep is a count of sompi.](STUDY.md#his-review-of-fd0b3eb-6-nov-2026) |
+| 6 Nov 2026 | These notes, no new chain | [Kaspa only. A fifth of the window cannot both open a price and be the median. No new devnet.](STUDY.md#kaspa-only-6-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -66,6 +67,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - A cut of 100 basis points leaves the finder 4356000000 sompi of a 4400000000 subsidy. The sompi share stays the block share. A band around the median charges nothing to the coalition that sets it. Fifteen steps of 5 percent on 2016 blocks at 10 a second are 3024 seconds of calculation. The same fifteen steps on a 12096000-block period are 210 days. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
 - Four or five home ASICs were not pointed at a devnet. A fifth of a 6000-block window is 1200 blocks, and the spread is 30. That stays under the thin-window tie of 1500. The machines stay on their current work. [Home ASICs, asked on 6 Nov 2026.](STUDY.md#home-asics-asked-on-6-nov-2026)
 - A review of commit `fd0b3eb` was checked the same day. The distance from 1200 blocks to 1500 is about 9.68 standard deviations. A fifth of the window cannot both open a priced window and be the median on the expected blocks. The review's example haircut of 440000000 is not the recorded 44000000. The machines stay where they are. [His review of fd0b3eb.](STUDY.md#his-review-of-fd0b3eb-6-nov-2026)
+- The study follows Kaspa. A fifth of a 6000-block window is 1200 blocks, and twice that is under the 3000 votes a priced window asks for. Nine spreads of 30 still miss 1500. A new devnet was not started. [Kaspa only, 6 Nov 2026.](STUDY.md#kaspa-only-6-nov-2026)
 
 ## Shapes
 
@@ -101,7 +103,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the review of fd0b3eb on 6 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through Kaspa only on 6 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |

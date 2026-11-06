@@ -486,3 +486,23 @@ test("one fifth of a thin window does not reach the median by noise", () => {
   assert.equal(blockSpread(6_000, 2_500), 33);
   assert.equal(blockSpread(6_000, 7_500), 33);
 });
+
+test("a fifth cannot open a priced window and be the median", () => {
+  const blocks = 6_000;
+  const found = coalitionBlocks(blocks, 2_000);
+  const spread = blockSpread(blocks, 2_000);
+  assert.equal(found, 1_200);
+  assert.equal(spread, 30);
+  assert.equal(found + 9 * spread, 1_470);
+  assert.ok(found + 9 * spread < 1_500);
+  assert.equal(found + 10 * spread, 1_500);
+  assert.equal(windowHasPrice(3_000, blocks), true);
+  assert.equal(windowHasPrice(2_999, blocks), false);
+  assert.equal(found * 2, 2_400);
+  assert.equal(votesMoveMedian(found, found), true);
+  assert.equal(windowHasPrice(found * 2, blocks), false);
+  assert.equal(minAttackerBps(5_000), 2_500);
+  assert.equal(coalitionBlocks(blocks, 2_500), 1_500);
+  assert.equal(windowHasPrice(3_000, blocks), true);
+  assert.equal(votesMoveMedian(1_500, 1_500), true);
+});

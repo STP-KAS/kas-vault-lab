@@ -351,3 +351,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No wallet was spent. The review of commit `fd0b3eb9fe5eec27d9a1b20a1876df6a71eb6a86` was checked against the files. The transaction ids it names are the ones already in this file. They were not read from a node again. The command named in `STUDY.md` was not run again. The 59 passes in the section above stay there.
 
 **Reasoning.** The review is an opinion of that commit. The recorded haircut stays 44000000 sompi. This is a study. We are not claiming a stablecoin.
+
+## Kaspa only, 6 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No new devnet was started. No wallet was spent. `windowHasPrice(3000, 6000)` is true and `windowHasPrice(2400, 6000)` is false. `coalitionBlocks(6000, 2000)` is 1200. The command named in `STUDY.md` passed 60 tests. The runner printed 0 failures. The 59 passes in the review section stay there.
+
+**Reasoning.** The coins in this study are Kaspa. A dollar price is still a number the hash does not contain. This is a study. We are not claiming a stablecoin.
