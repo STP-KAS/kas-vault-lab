@@ -109,3 +109,7 @@ This is a study. We are not claiming a stablecoin.
 Four or five home ASICs on a private devnet would still be one operator. `blockSpread(6000, 2000)` is 30 blocks. A fifth of that window is 1200, and 1200 plus 30 stays under the thin-window tie of 1500. Two fifths are 2400, and the spread of 37 leaves them above 1500. The spread assumes one winner per block. An ASIC does not wait for the driver. A stratum bridge would be this desk writing the payload. No pool setting was changed. No ASIC was pointed anywhere. The command passed 59 tests and printed 0 failures. The 58 stays in the section above.
 
 This is a study. We are not claiming a stablecoin.
+
+## His review of fd0b3eb, 6 Nov 2026
+
+The review is an opinion of commit `fd0b3eb9fe5eec27d9a1b20a1876df6a71eb6a86`. It is not a work order. The repository was left unchanged. The distance from 1200 blocks to the thin-window tie of 1500 is about 9.68 standard deviations, and 30 is one floored deviation. A fifth of the window, 1200 blocks, can be half the votes only when the voting total is at most 2400, and a priced window of 6000 blocks asks for 3000 votes. The review wrote `440000000` where the recorded per-block haircut is `44000000`. A tie returns 0 at either figure. `fits` stays true while a quote key is set. `clock.sil` `prove` and `clock-probe.sil` `full` call the same four checks, and this pass did not compile them. The 59 stays in the section above. The review's opinion matches the brake note: the claim the script can keep is a count of sompi.
