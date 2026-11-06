@@ -24,6 +24,8 @@ import {
   votesMoveMedian,
   windowHasPrice,
   minAttackerBps,
+  BIP100_PERIOD,
+  bip100Next,
   cappedFall,
   daaSpan,
   signerWindowAllows,
@@ -258,6 +260,23 @@ test("half the votes moves the median, and a thin window lowers the hashrate", (
   assert.equal(minAttackerBps(9_000), 4_500);
   assert.equal(minAttackerBps(10_000), 5_000);
   assert.equal(minAttackerBps(4_000), null);
+});
+
+test("BIP 100 moves on 1512 of 2016 and by at most five percent", () => {
+  const current = 1_000_000;
+  const high = new Array(1512).fill(8_000_000).concat(new Array(504).fill(current));
+  assert.equal(high.length, BIP100_PERIOD);
+  assert.equal(bip100Next(high, current), 1_050_000);
+  const short = new Array(1511).fill(8_000_000).concat(new Array(505).fill(current));
+  assert.equal(bip100Next(short, current), current);
+  const quarter = new Array(504).fill(8_000_000).concat(new Array(1512).fill(current));
+  assert.equal(bip100Next(quarter, current), current);
+  const absent = new Array(BIP100_PERIOD).fill(0);
+  assert.equal(bip100Next(absent, current), current);
+  const low = new Array(1512).fill(500_000).concat(new Array(504).fill(current));
+  assert.equal(bip100Next(low, current), Math.floor((current * 100) / 105));
+  assert.equal(Math.floor((1512 * 10_000) / 2016), 7_500);
+  assert.equal(minAttackerBps(5_000), 2_500);
 });
 
 test("a 25 percent hourly cap takes four hours to fall 60 percent", () => {

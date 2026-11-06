@@ -39,6 +39,8 @@ Each line is the short record. The link is the note for that day: what was done,
 | 4 Nov 2026 | The same half-split devnet, localhost only | [A promise of 100000000 sompi was paid to the bearer. A rewrite of that count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-promise-on-the-node-4-nov-2026) |
 | 5 Nov 2026 | These notes, no new chain | [A short extract of the position, the promise, and the 3 Nov page reading. SilverScript v1.0.0 emitted the same bytecode. No new covenant.](FINDINGS.md) |
 | 5 Nov 2026 | The same half-split devnet, localhost only | [The bearer handed the same promise of 100000000 sompi to the mining address. A doubled count was rejected. The miner was paid the full KAS reward.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026) |
+| 5 Nov 2026 | These notes, no new chain | [The constructor integers, and a model of the handoff. No new covenant.](STUDY.md#the-handoff-integers-5-nov-2026) |
+| 6 Nov 2026 | These notes, no new chain | [SchellingCoin, BIP 100, and why this desk does not build that oracle.](STUDY.md#the-oracle-he-named-6-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -54,6 +56,10 @@ These are the limits that later measurements did not close. Settled corrections 
 - Acceptance was not waited out to finality depth. A failed script comes back as one sentence.
 - The fixed promise was paid once. The bearer received 100000000 sompi from a lock of 200000000. A rewrite of the count was rejected. A withdraw that would have left less than the promise was rejected. A claim that paid 50000000 was rejected. The chain script requires a surplus above zero, so a lock equal to the promise was not this broadcast. The model still allows that equal case. The promise moves when KAS moves. Finality was not waited. [The promise on the node.](STUDY.md#the-promise-on-the-node-4-nov-2026)
 - `promise.sil` still names one bearer. `promise-pass.sil` let that bearer name the next one. The count stayed 100000000 and the lock stayed 200000000 until the claim. The next bearer is the address that mines this devnet. The payment was an ordinary output. A version-1 transaction id does not cover the signature, so the rejected locker signature and the included pass share one id. Finality was not waited. [The bearer handed the promise.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026)
+- `position.sil` has no entry that adds collateral. The entries are `seal`, `mint`, `step`, `stepNote`, `withdraw`, `vaultRedeem`, and `noteRedeem`. `withdraw` can reduce the collateral. While the debt is above 0, what remains has to meet the mint ratio. [The handoff integers.](STUDY.md#the-handoff-integers-5-nov-2026)
+- The local calculator accepted 2000000 sompi on `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`. The node required 3784000 for transient mass 37840. The position driver now starts at 5000000. That floor is the driver's number. It is not a measurement that the calculator matches the node.
+- A pass to the same bearer, and a lock equal to the promise, were not broadcast on `promise-pass.sil`. The script already refuses the same bearer. The file has no withdraw, so a rejected equal-lock claim would leave the sompi in the covenant. The model refuses both. The chain was not asked.
+- The oracle named on 6 Nov 2026 was not built here. BIP 100 moves on 1512 of 2016 votes, and by at most 5 percent. The thin window already recorded still moves on a quarter of the hashrate. A coinbase price is not a change to the hash. [The oracle he named.](STUDY.md#the-oracle-he-named-6-nov-2026)
 
 ## Shapes
 
@@ -87,7 +93,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the handoff on 5 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the oracle named on 6 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |
@@ -99,5 +105,6 @@ The settled lines, including the block-count field, the balance reader, and the 
 | [contracts/promise.sil](contracts/promise.sil) | One lock, one sompi promise, no quote |
 | [contracts/promise-pass.sil](contracts/promise-pass.sil) | The bearer names the next bearer. The count stays |
 | [model/promise.mjs](model/promise.mjs) | The same integers. The model still allows a surplus of zero |
+| [model/promise-pass.mjs](model/promise-pass.mjs) | The handoff. The next bearer is someone else. The count stays |
 | [contracts/vault.sil](contracts/vault.sil) | The 27 Oct vault. Unchanged |
 | [RUN.md](RUN.md) | Commands for this desk. Not a public run. |

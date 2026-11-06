@@ -182,3 +182,13 @@ https://x.com/Rumbo_A_La_Cima/status/2114800683136540713
 **Fact.** The same pages limit how fast that median may move a price. Mint may rise 10 percent an hour and may fall at once, and it stays at or below the median. Liquidation, which is also their redeem price, falls 25 percent an hour on the chart and in the fall-limit section, and one bullet leaves the fall uncapped. A missing price for 30 minutes stops mint, withdraw, liquidate, and redeem, and leaves add, repay, and close running. A missing price for 30 days settles that vault at the last price, ends its minting, redeems with no fee, and returns the KAS above the debt to the owner. The vote window is ten minutes and is marked preliminary. None of the five names a clock.
 
 **Reasoning.** A shop that trusts "a false low price takes hours" is trusting the fall cap. One step of 25 percent against the price from an hour earlier keeps that sentence, and so does subtracting 25 points an hour. Repeating the 25 percent at every ten-minute sample does not, and the uncapped bullet does not. The median clamp stops a capped mint from printing a price above the vote, and stops a capped liquidation from printing a price below it. The halt is a period when the note cannot be redeemed. Settlement is what opens redeem again, at the last price, with the fee removed. The amount of the oracle fee is still unpublished, and the block reward on their page is still whole. The DAA wait measured on this desk moved 20000000 sompi from one covenant output to the next. It did not price anything.
+
+## The same integers, 5 Nov 2026
+
+**Fact.** The position driver opens at 25000 basis points, with a stored liquidation line of 20000 and a bonus of 500. `policy` checks those two fields. No entry spends them. The peg driver remains 20000, 15000, and 500. The numbers were not copied across. The bands and the hours above are the 3 Nov reading. They were not read again.
+
+**Fact.** A handoff of 100000000 sompi from a lock of 200000000 does not change the count. The model of that handoff is `model/promise-pass.mjs`. A claim where the lock equals the promise still returns a surplus of 0 from `claimPays`, and the handoff model refuses that claim. It was not broadcast. The command passed 56 tests. The earlier counts stay in their own notes.
+
+## A second income, named on 6 Nov 2026
+
+**Fact.** The posts are in `STUDY.md`. BIP 100 changes a block-size limit. It does not pay a second income. The fee beside the subsidy is the 3 Nov reading, and the amount is still blank. `bip100Next` does not pay anyone. The block reward in this study stays the full KAS reward. The command on 6 Nov passed 57 tests. The 56 stays in the section above.

@@ -56,6 +56,8 @@ The comparison used placeholder constructor bytes for the promise and the positi
 
 ## Left undone
 
+The sentences below are the extract. The handoff is the next section. The constructor integers are the section after that.
+
 No new covenant was written. `position.sil`, `promise.sil`, and `peg.sil` were not edited. The second-step cap and the participation gate were already tests in `model/position.test.mjs`, so they were not copied into a new contract. Liquidation was not added. A miner median was not added. A freeze was not added. The Kaspa Dollar pages were not fetched again. The long notes were not rewritten. No transaction was broadcast. The private devnet was not restarted.
 
 ## A bearer handed the same count, 5 Nov 2026
@@ -67,3 +69,27 @@ The section above is the extract. This section is the later measurement.
 On the half-split devnet the lock was 200000000 sompi and the promise was 100000000. Virtual DAA went from 1296 to 1300. The past median on this read was `1793578216327`. The script does not read it. Covenant `f772aab3e9064fc46bdc4972bcfae0d3ddc7dd8f7510a6f29e7a49de1d498138`. Open `ec3fc3134065c16fb7b4c36c39afa96dc57550db2eca386ef539278cb00e41c6` is in header DAA 1296. Its output script is the first bearer. A pass that paid a redeem compiled for a promise of 200000000 was rejected. That id, `1f6441e8d600989d0d87e95bdf7f60307ce3772a7abd5ba7c10816a20606bd0c`, is not in the chain. The locker signature was rejected. The included pass is `c82ff68ee8e66c4c459d26e5792fae7b4cbd2e612d600af6de1e4ce01003f272`, header DAA 1297. The output script is the next bearer. The covenant id is the same. Those two signatures share one transaction id because a version-1 id does not cover the signature script. The first bearer's claim was rejected. The included claim is `a4717649bd49b02f001bf0ff0e7a24bfff196d62d722a920eaf5b7b75e4843ac`, header DAA 1298. Output 0 paid the locker 100000000. Output 1 paid the next bearer 100000000. The covenant is gone. The next bearer is the address that mines this devnet. There is no fourth key. The pay is an ordinary output. Each fee was 5000000 sompi, and the next free coinbase half carried it. The locked half stayed 2200000000 and still carries `STP1`. The model command passed 52 tests. The model was not changed. Finality was not waited.
 
 This names who may later claim a fixed count. The count stayed. It does not sell KAS, and it does not name a dollar. `promise.sil` still cannot change its bearer.
+
+## The handoff integers, 5 Nov 2026
+
+No node was started. No covenant was opened. `promise.sil`, `promise-pass.sil`, `position.sil`, and `peg.sil` were not edited.
+
+`model/promise-pass.mjs` refuses a pass to the same bearer or the zero key, and it refuses a changed lock or a changed promise. `passClaimAllows(200000000, 100000000)` is true. `passClaimAllows(200000000, 200000000)` is false. `claimPays(200000000, 200000000)` still returns a surplus of 0. The command passed 56 tests, with 0 failures. The 52 passes in the section above stay there. The morning of 4 Nov stays at 51.
+
+The position driver passes 25000, 20000, and 500 after the debt and the oracle. Those are the mint ratio, the liquidation line, and the bonus. `policy` checks them. No entry spends them. This pass did not read those three integers out of a chain script. The peg driver passes 20000, 15000, and 500. Those numbers were not copied into `peg.sil`.
+
+`position.sil` has no entry that adds collateral. `withdraw` can reduce the collateral while the debt is above 0 only when what remains meets the mint ratio.
+
+A pass to the same bearer was not broadcast. A lock equal to the promise was not broadcast on this file. There is no withdraw, so a rejected claim would leave the sompi in the covenant. The previous bearer's claim is already `a4717649bd49b02f001bf0ff0e7a24bfff196d62d722a920eaf5b7b75e4843ac`. It was not submitted again.
+
+The local calculator accepted 2000000 sompi on `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`. The node required 3784000 for transient mass 37840. The position driver now starts at 5000000. That floor is the driver's number. It does not show that the calculator matches the node.
+
+This is a study. We are not claiming a stablecoin.
+
+## The oracle he named, 6 Nov 2026
+
+On 6 Nov 2026 the posts say the oracle is his own design, inspired by SchellingCoin and BIP 100, and that it is meant to do more than price KSD. SchellingCoin commits a hash before the reveal and pays the band around the median. The 3 Nov reading is a public coinbase median. BIP 100 moves a block-size limit on 1512 of 2016 votes, by at most 5 percent, and a missing vote counts as the current limit. `minAttackerBps(5000)` remains 2500. The command passed 57 tests and printed 0 failures. The 56 stays in the section above it in `STUDY.md`.
+
+The oracle was not built. This desk is the only miner on the private devnet. A payload does not make the hash useful work. The second income, as read on 3 Nov, is a fee beside the subsidy, and the amount is still unpublished. The pages were not read again.
+
+This is a study. We are not claiming a stablecoin.

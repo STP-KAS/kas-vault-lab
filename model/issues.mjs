@@ -175,6 +175,33 @@ export function windowHasPrice(votingBlocks, blocks) {
   return votingBlocks * 2 >= blocks;
 }
 
+// BIP 100, the closed text. Not a Kaspa rule, and not a covenant in this repo.
+// A retarget reads 2016 coinbase votes. A missing or zero vote counts as the
+// current limit. The raise is the 1512th highest vote, and it may not exceed
+// the current limit times 105/100, rounded down. The lower is the 1512th
+// lowest, and it may not go under the current limit times 100/105, rounded down.
+export const BIP100_PERIOD = 2016;
+const BIP100_RANK = 1512;
+
+export function bip100Next(votes, current) {
+  if (!Number.isInteger(current) || current <= 0) throw new Error("bad limit");
+  if (!Array.isArray(votes) || votes.length !== BIP100_PERIOD) throw new Error("bad votes");
+  const filled = votes.map((vote) => {
+    if (vote == null || vote === 0) return current;
+    if (!Number.isInteger(vote) || vote < 0) throw new Error("bad vote");
+    return vote;
+  });
+  const raise = [...filled].sort((a, b) => b - a)[BIP100_RANK - 1];
+  const lower = [...filled].sort((a, b) => a - b)[BIP100_RANK - 1];
+  const raiseCap = Math.floor((current * 105) / 100);
+  const lowerCap = Math.floor((current * 100) / 105);
+  const raiseValue = raise > raiseCap ? raiseCap : raise;
+  if (raiseValue > current) return raiseValue;
+  const lowerValue = lower < lowerCap ? lowerCap : lower;
+  if (lowerValue < current) return lowerValue;
+  return current;
+}
+
 // Attacker hashrate, in bps of the network, needed to be half the votes.
 // A participation below 5000 bps has no price, so the attacker share is null.
 export function minAttackerBps(participationBps) {

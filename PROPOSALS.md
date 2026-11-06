@@ -27,3 +27,7 @@ Each item says whether it restates a file or adds a judgment.
 11. **Fact, then the same restraint.** Item 8 described `vault.sil`. `peg.sil` now lets the note holder redeem at the stored quote. Do not add a square button for it. The quote is still a lab key, the token is still worthless, and the square's rails stay `kas`, `poc`, and `kusdt`.
 
 12. **Fact, then the same restraint.** The 4 Nov promise is a count of sompi, chosen once. Do not add a square button for it. Do not describe it as STP, as a stablecoin, or as a rail. The square's rails stay `kas`, `poc`, and `kusdt`.
+
+13. **Fact, then the same restraint.** `position.sil` and `promise-pass.sil` are in this repo. Do not add a square button for either. Do not describe them as a rail, as a freeze, or as a cut in the subsidy. The square's rails stay `kas`, `poc`, and `kusdt`.
+
+14. **Fact, then the same restraint.** A coinbase price was named on 6 Nov 2026 as an oracle for more than one product. Do not add a square button for it. Do not describe that payload as useful work, as a second coin, or as a cut in the subsidy. The square's rails stay `kas`, `poc`, and `kusdt`.
