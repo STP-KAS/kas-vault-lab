@@ -357,3 +357,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No new devnet was started. No wallet was spent. `windowHasPrice(3000, 6000)` is true and `windowHasPrice(2400, 6000)` is false. `coalitionBlocks(6000, 2000)` is 1200. The command named in `STUDY.md` passed 60 tests. The runner printed 0 failures. The 59 passes in the review section stay there.
 
 **Reasoning.** The coins in this study are Kaspa. A dollar price is still a number the hash does not contain. This is a study. We are not claiming a stablecoin.
+
+## The constructor, read back, 6 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. The half devnet already running answered, network id devnet, virtual DAA 1300. The seal `05ea3597a63d0cabd735b9247f64a4a39e4f558ed3fd378da719ca537d10d7b7` was read from header DAA 1253. Its first input spends the open's first output. The last of three pushes is 9108 bytes and equals the open compile. Those bytes hold 25000 at offset 165, 20000 at offset 174, and 500 at offset 183. The outputs are 200000000 and 1340906100. The first output's script, after a two-byte version of 0, is the pay-to-script-hash of the sealed compile. The mint `76d60636c77be94e0711ce9a7dca275e5c89a19c144fb75009d83298b6ccb02d` was read from header DAA 1254. Its long push equals that sealed compile and holds the same three integers. The open and sealed compiles differ by one byte, at offset 192. The second position was not read. The command named in `STUDY.md` was not run again. The 60 passes in the section above stay there.
+
+**Reasoning.** The three integers are in the script the chain already accepted. The liquidation line and the bonus are stored. This read did not spend them. This is a study. We are not claiming a stablecoin.

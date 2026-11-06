@@ -117,3 +117,7 @@ The review is an opinion of commit `fd0b3eb9fe5eec27d9a1b20a1876df6a71eb6a86`. I
 ## Kaspa only, 6 Nov 2026
 
 The study follows Kaspa. A page about an oracle on another chain is not an input. A fifth of a 6000-block window is 1200 blocks. Twice that is 2400, and a priced window asks for 3000. Nine spreads of 30 leave 1470, still under 1500. Ten land on 1500. A quarter of hashrate, 1500 against 1500, is the thin-window tie and the smallest voting total that prices the window. A new devnet was not started. The command passed 60 tests and printed 0 failures. The 59 stays in the section above.
+
+## The constructor, read back, 6 Nov 2026
+
+The half devnet already running answered. Virtual DAA on this read was 1300. No new covenant was opened, and no coin moved. The seal `05ea3597a63d0cabd735b9247f64a4a39e4f558ed3fd378da719ca537d10d7b7` pushes 9108 bytes that equal a fresh open compile. The mint `76d60636c77be94e0711ce9a7dca275e5c89a19c144fb75009d83298b6ccb02d` pushes 9108 bytes that equal the sealed compile. The two compiles differ by one byte, at offset 192, which is 0 before the seal and 1 after it. A byte of value 8 precedes each integer. Offset 165 holds 25000, offset 174 holds 20000, and offset 183 holds 500, each once, in both scripts. The first seal output is the pay-to-script-hash of the sealed compile. The second position was not read. `liqBps` and `bonusBps` stay stored. The model command was not run again. The 60 stays in the section above.
