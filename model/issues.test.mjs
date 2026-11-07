@@ -15,6 +15,7 @@ import {
   rewardRecipient,
   splitReward,
   subsidyMonth,
+  perBlockSompi,
   supplyOf,
   survivesGap,
   utcDays,
@@ -505,4 +506,10 @@ test("a fifth cannot open a priced window and be the median", () => {
   assert.equal(coalitionBlocks(blocks, 2_500), 1_500);
   assert.equal(windowHasPrice(3_000, blocks), true);
   assert.equal(votesMoveMedian(1_500, 1_500), true);
+});
+
+test("the recorded public reward is one row of the same table", () => {
+  assert.equal(perBlockSompi(44_000_000_000, 10), 4_400_000_000);
+  assert.equal(perBlockSompi(2_060_172_230, 10), 206_017_223);
+  assert.equal(206_017_223, 2 * 100_000_000 + 6_017_223);
 });

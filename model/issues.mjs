@@ -23,6 +23,13 @@ export function subsidyMonth(daa, deflationDaa, bps) {
   return Math.floor(seconds / SECONDS_PER_MONTH);
 }
 
+// One block's sompi from that month's sompi-per-second. Rounds up.
+export function perBlockSompi(sompiPerSecond, bps) {
+  if (!Number.isInteger(sompiPerSecond) || sompiPerSecond < 0) throw new Error("bad subsidy");
+  if (!Number.isInteger(bps) || bps <= 0) throw new Error("bad bps");
+  return Math.floor((sompiPerSecond + bps - 1) / bps);
+}
+
 // Miner dollar value if a hard fork diverts fraction alpha of the subsidy
 // into an overcollateralized dollar. CR is bps (15000 = 1.5x).
 // V = (s + f) * P - alpha * s * P * (1 - 1/CR)

@@ -488,3 +488,17 @@ The shapes stay. This section is the practice this desk would keep, named the po
 **Fact.** The mint's first input ends in a push of 9108 bytes. That push equals the sealed compile, so its three fields are 25000, 20000, and 500. Its second input is one 65-byte push. `position.sil` was not edited. No entry was added. `liqBps` and `bonusBps` remain stored.
 
 **Reasoning.** The earlier pass left 25000, 20000, and 500 as arguments the driver passes in. This read takes the same three from the script the seal already revealed, and again from the script the mint already revealed. They are the mint ratio, the liquidation line, and the bonus. The liquidation line and the bonus sit in the covenant. Nothing in the contract spends them, and this read did not add a spend. A price of KAS is still a number the hash does not contain. The claim the script can keep is a count of sompi. This is a study. We are not claiming a stablecoin.
+
+## The DAA copy, left on paper, 7 Nov 2026
+
+**Fact.** The plan for this desk is to leave the nodes as they are. No new devnet is started. No new data directory is created. No new binary is built. No coin moves. TN10 stays on its public work. The two private devnets already running stay unpeered.
+
+**Fact.** The plan for the mini PC is to leave it off this chain. No miner is started there. It is not given a tunnel.
+
+**Fact.** The plan for the Grok Bot machine is to leave the box miner on its public work. This desk does not ask that machine to mine a private chain. It does not edit this repository. The home ASIC machines stay on their current work. No pool setting is read.
+
+**Fact.** The subsidy table in the local `v2.1.0` tree has 426 entries. Entry 0 is 44000000000 sompi per second. `perBlockSompi(44000000000, 10)` is 4400000000, the private devnet's month-0 reward. Entry 53 is 2060172230 sompi per second, and that value appears once. `perBlockSompi(2060172230, 10)` is 206017223. 206017223 sompi is 2 KAS plus 6017223 sompi, which is 2.06017223 KAS. That is the public reward recorded on 3 Nov 2026. This pass did not read a live DAA. No newer public reward was fetched.
+
+**Fact.** The same command passed 61 tests and printed 0 failures. The 60 stays in the section above. The 59, the 58, the 57, the 56, the 52, and the morning 51 stay in theirs.
+
+**Reasoning.** A private chain whose score selected entry 53 would pay the public month. The machines that could mine it are this desk, the mini PC, and the Grok Bot machine. They are one person's machines. The payloads would be chosen here, and the coin would be a lab coin. The box miner would have to leave its public work to do that. The table already shows the sompi. The price of KAS is still a number the hash does not contain. The study continues in these notes. This is a study. We are not claiming a stablecoin.
