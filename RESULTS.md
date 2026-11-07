@@ -372,6 +372,12 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 
 ## Their pages, read again on 7 Nov 2026
 
-**Fact.** No transaction was broadcast. No node was started. No coin moved. The balance API returned `{"balance":54873897542290}` sompi for `kaspa:qpy0rvs9mkfa66vnhre4dwsc4c0nu8jhvk0jlfzvq7x8pejjezpujpyrwecl6`. The homepage displayed 548,738 of 5,000,000 KAS and 10.9 percent. The 3 Nov API figure stays in that note. `minStopBps(10000)` is 5001. `minStopBps(9000)` is 4001. `minStopBps(5500)` is 501. `minStopBps(5000)` is 1. The command named in `STUDY.md` passed 62 tests. The runner printed 0 failures. The 61 passes in the section above stay there.
+**Fact.** No transaction was broadcast. No node was started. No coin moved. `minStopBps(10000)` is 5001. `minStopBps(9000)` is 4001. `minStopBps(5500)` is 501. `minStopBps(5000)` is 1. The command named in `STUDY.md` passed 62 tests. The runner printed 0 failures. The 61 passes in the section above stay there.
 
 **Reasoning.** The pages were read again. The whitepaper body was not there. This is a study. We are not claiming a stablecoin.
+
+## The step that does not fit, 7 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. `position.sil` was not edited. A lock of 150000000 sompi, 20 cents, quote 300000000, fails redeem at quote 711111110. The payment is 142222222 and the surplus is 7777778. The dust is 20000000. Quote 650000000 leaves 20000000. The vault of 200000000 fails at quote 948148146 and leaves 10370370. The command named in `STUDY.md` passed 63 tests. The runner printed 0 failures. The 62 passes in the section above stay there.
+
+**Reasoning.** The cap allows a quote the redeem cannot pay. The oracle is the signer who can bring it back. This is a study. We are not claiming a stablecoin.

@@ -48,6 +48,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 6 Nov 2026 | The same half-split devnet, read only | [The included seal and the included mint both carry 25000, 20000, and 500. No new covenant.](STUDY.md#the-constructor-read-back-6-nov-2026) |
 | 7 Nov 2026 | These notes, no new chain | [The DAA copy stays on paper. The desk, the mini PC, and the Grok Bot machine do not mine it.](STUDY.md#the-daa-copy-left-on-paper-7-nov-2026) |
 | 7 Nov 2026 | Their pages, read again | [The liquidation bullet matches the chart. Silence at a full window takes 5001 basis points. The paper still has no body.](STUDY.md#their-pages-read-again-on-7-nov-2026) |
+| 7 Nov 2026 | These notes, no new chain | [Three rises stick a vault opened at the mint ratio. The surplus is 7777778 sompi, under the dust.](STUDY.md#the-step-that-does-not-fit-7-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -74,6 +75,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - The mint ratio 25000, the liquidation line 20000, and the bonus 500 were read from the seal and the mint already in the chain. The liquidation line and the bonus stay stored. No new covenant was opened. [The constructor, read back.](STUDY.md#the-constructor-read-back-6-nov-2026)
 - A private chain that copied the public DAA score was not built. The desk, the mini PC, and the Grok Bot machine stay on their present work. Entry 53 of the subsidy table is the public reward recorded on 3 Nov 2026. [The DAA copy, left on paper.](STUDY.md#the-daa-copy-left-on-paper-7-nov-2026)
 - On 7 Nov 2026 the how-it-works liquidation bullet matches the chart. Leaving a window where every block votes takes 5001 basis points. At 90 percent it takes 4001, their picture of 11 blocks out of 20 takes 501, and at 50 percent it takes 1. The share that stops was voting, and then it leaves. The whitepaper body was still absent. [Their pages, read again.](STUDY.md#their-pages-read-again-on-7-nov-2026)
+- A vault opened at the mint ratio sticks on the third rise. Quote 711111110 pays 142222222 and leaves 7777778, under the dust of 20000000. The cap allows that step. The oracle is the signer who can bring the quote back. `position.sil` was not edited. [The step that does not fit.](STUDY.md#the-step-that-does-not-fit-7-nov-2026)
 
 ## Shapes
 
@@ -109,7 +111,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the 7 Nov page reading |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the step that does not fit on 7 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |
