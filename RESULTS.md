@@ -369,3 +369,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No coin moved. No miner was started on the mini PC. The Grok Bot machine was not asked to mine. `perBlockSompi(44000000000, 10)` is 4400000000. `perBlockSompi(2060172230, 10)` is 206017223. The command named in `STUDY.md` passed 61 tests. The runner printed 0 failures. The 60 passes in the section above stay there.
 
 **Reasoning.** The public month is a row in the table. A new chain is not required to read it. This is a study. We are not claiming a stablecoin.
+
+## Their pages, read again on 7 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. The balance API returned `{"balance":54873897542290}` sompi for `kaspa:qpy0rvs9mkfa66vnhre4dwsc4c0nu8jhvk0jlfzvq7x8pejjezpujpyrwecl6`. The homepage displayed 548,738 of 5,000,000 KAS and 10.9 percent. The 3 Nov API figure stays in that note. `minStopBps(10000)` is 5001. `minStopBps(9000)` is 4001. `minStopBps(5500)` is 501. `minStopBps(5000)` is 1. The command named in `STUDY.md` passed 62 tests. The runner printed 0 failures. The 61 passes in the section above stay there.
+
+**Reasoning.** The pages were read again. The whitepaper body was not there. This is a study. We are not claiming a stablecoin.

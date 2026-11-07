@@ -25,6 +25,7 @@ import {
   votesMoveMedian,
   windowHasPrice,
   minAttackerBps,
+  minStopBps,
   BIP100_PERIOD,
   bip100Next,
   floorScale,
@@ -268,6 +269,24 @@ test("half the votes moves the median, and a thin window lowers the hashrate", (
   assert.equal(minAttackerBps(9_000), 4_500);
   assert.equal(minAttackerBps(10_000), 5_000);
   assert.equal(minAttackerBps(4_000), null);
+});
+
+test("leaving a full window takes more hash than moving it", () => {
+  assert.equal(minStopBps(10_000), 5_001);
+  assert.equal(minAttackerBps(10_000), 5_000);
+  assert.ok(minStopBps(10_000) > minAttackerBps(10_000));
+  assert.equal(minStopBps(9_000), 4_001);
+  assert.equal(minAttackerBps(9_000), 4_500);
+  assert.ok(minStopBps(9_000) < minAttackerBps(9_000));
+  assert.equal(minStopBps(5_000), 1);
+  assert.equal(minAttackerBps(5_000), 2_500);
+  assert.equal(minStopBps(5_500), 501);
+  assert.equal(minAttackerBps(5_500), 2_750);
+  assert.equal(minStopBps(4_000), 0);
+  assert.equal(minAttackerBps(4_000), null);
+  assert.equal(minStopBps(4_999), 0);
+  assert.equal(windowHasPrice(5_000, 10_000), true);
+  assert.equal(windowHasPrice(4_999, 10_000), false);
 });
 
 test("BIP 100 moves on 1512 of 2016 and by at most five percent", () => {

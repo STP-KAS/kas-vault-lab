@@ -304,6 +304,16 @@ export function minAttackerBps(participationBps) {
   return Math.floor(participationBps / 2);
 }
 
+// Smallest share, in bps of the network, that stops a priced window by leaving it.
+// The page's inequality is strict: a > P - 5000. Below 5000 the window already has no price.
+export function minStopBps(participationBps) {
+  if (!Number.isInteger(participationBps) || participationBps < 0 || participationBps > 10_000) {
+    throw new Error("bad participation");
+  }
+  if (participationBps < 5_000) return 0;
+  return participationBps - 5_000 + 1;
+}
+
 // Remaining price after `hours` of a compound per-hour fall, as a reduced fraction.
 export function cappedFall(hours, fallPerHourBps) {
   if (!Number.isInteger(hours) || hours < 0) throw new Error("bad hours");
