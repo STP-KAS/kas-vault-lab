@@ -26,6 +26,14 @@ import {
   windowHasPrice,
   minAttackerBps,
   minStopBps,
+  lowerMedianIndex,
+  compoundPower,
+  fractionBelow,
+  recountedHours,
+  sliceOfReward,
+  dollarMicro,
+  coverAtRatio,
+  treasurySplit,
   BIP100_PERIOD,
   bip100Next,
   floorScale,
@@ -287,6 +295,56 @@ test("leaving a full window takes more hash than moving it", () => {
   assert.equal(minStopBps(4_999), 0);
   assert.equal(windowHasPrice(5_000, 10_000), true);
   assert.equal(windowHasPrice(4_999, 10_000), false);
+});
+
+test("the paper's median index and the proven hour", () => {
+  assert.equal(lowerMedianIndex(1), 0);
+  assert.equal(lowerMedianIndex(2), 0);
+  assert.equal(lowerMedianIndex(11), 5);
+  assert.equal(minAttackerBps(10_000), 5_000);
+  assert.equal(minStopBps(10_000), 5_001);
+  assert.equal(minAttackerBps(9_000), 4_500);
+  assert.equal(minStopBps(9_000), 4_001);
+  assert.ok(3_270 < minStopBps(9_000));
+  assert.ok(5_710 > minAttackerBps(9_000));
+  const rise7 = compoundPower(7, 11_000, 10_000);
+  const rise8 = compoundPower(8, 11_000, 10_000);
+  assert.equal(fractionBelow(rise7, 2, 1), true);
+  assert.equal(fractionBelow(rise8, 2, 1), false);
+  assert.equal(fractionBelow(cappedFall(2, 2_500), 1, 2), false);
+  assert.equal(fractionBelow(cappedFall(3, 2_500), 1, 2), true);
+  assert.equal(fractionBelow(cappedFall(8, 2_500), 1, 10), false);
+  assert.equal(fractionBelow(cappedFall(9, 2_500), 1, 10), true);
+  assert.equal(recountedHours(6_000, 600), 1_000);
+  assert.equal(fractionBelow(cappedFall(1, 2_500), 1, 2), false);
+});
+
+test("ten and twenty percent of the recorded reward are more KAS", () => {
+  const perBlock = 206_017_223;
+  const blocks = 864_000;
+  const ten = sliceOfReward(perBlock, 1_000, blocks);
+  const twenty = sliceOfReward(perBlock, 2_000, blocks);
+  assert.equal(ten.cut, 20_601_722n);
+  assert.equal(ten.keep, 185_415_501n);
+  assert.equal(ten.day, 17_799_887_808_000n);
+  assert.equal(twenty.cut, 41_203_444n);
+  assert.equal(twenty.keep, 164_813_779n);
+  assert.equal(twenty.day, 35_599_775_616_000n);
+  const price = 36_600;
+  const tenValue = dollarMicro(ten.day, price);
+  const twentyValue = dollarMicro(twenty.day, price);
+  assert.equal(tenValue, 6_514_758_937n);
+  assert.equal(coverAtRatio(tenValue, 20_000), 3_257_379_468n);
+  assert.equal(twentyValue, 13_029_517_875n);
+  assert.equal(coverAtRatio(twentyValue, 20_000), 6_514_758_937n);
+  assert.ok(coverAtRatio(tenValue, 20_000) < 50_000_000_000n);
+  assert.ok(coverAtRatio(twentyValue, 20_000) < 50_000_000_000n);
+  assert.equal(coverAtRatio(tenValue / 2n, 20_000), 1_628_689_734n);
+  const fee = treasurySplit(100_000_000);
+  assert.equal(fee.miner, 85_000_000n);
+  assert.equal(fee.prover, 10_000_000n);
+  assert.equal(fee.keeper, 5_000_000n);
+  assert.equal(fee.left, 0n);
 });
 
 test("BIP 100 moves on 1512 of 2016 and by at most five percent", () => {

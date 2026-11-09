@@ -314,6 +314,72 @@ export function minStopBps(participationBps) {
   return participationBps - 5_000 + 1;
 }
 
+// Index of the lower median. The paper sorts the votes and takes floor((n-1)/2).
+export function lowerMedianIndex(votes) {
+  if (!Number.isInteger(votes) || votes < 1) throw new Error("bad votes");
+  return Math.floor((votes - 1) / 2);
+}
+
+// (num/den)^hours. Unreduced. Hours stay small.
+export function compoundPower(hours, num, den) {
+  if (!Number.isInteger(hours) || hours < 0 || hours > 64) throw new Error("bad hours");
+  if (!Number.isInteger(num) || !Number.isInteger(den) || num <= 0 || den <= 0) throw new Error("bad ratio");
+  let n = 1n;
+  let d = 1n;
+  for (let i = 0; i < hours; i += 1) {
+    n *= BigInt(num);
+    d *= BigInt(den);
+  }
+  return { num: n, den: d };
+}
+
+export function fractionBelow(frac, num, den) {
+  return frac.num * BigInt(den) < BigInt(num) * frac.den;
+}
+
+// Hours of cap if every chain block counts the whole window again.
+export function recountedHours(chainBlocks, windowSeconds) {
+  if (!Number.isInteger(chainBlocks) || chainBlocks < 0) throw new Error("bad blocks");
+  if (!Number.isInteger(windowSeconds) || windowSeconds < 0) throw new Error("bad window");
+  const hours = (BigInt(chainBlocks) * BigInt(windowSeconds)) / 3600n;
+  if (hours > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("hours too large");
+  return Number(hours);
+}
+
+// Sompi cut from one block, and the sum over a run of blocks. The finder keeps the rest.
+export function sliceOfReward(perBlock, sliceBps, blocks) {
+  if (!Number.isInteger(perBlock) || perBlock < 0) throw new Error("bad subsidy");
+  if (!Number.isInteger(sliceBps) || sliceBps < 0 || sliceBps > 10_000) throw new Error("bad slice");
+  if (!Number.isInteger(blocks) || blocks < 0) throw new Error("bad blocks");
+  const cut = (BigInt(perBlock) * BigInt(sliceBps)) / 10_000n;
+  const keep = BigInt(perBlock) - cut;
+  return { cut, keep, day: cut * BigInt(blocks) };
+}
+
+// micro-USD of a sompi pile at a price of micro-USD per KAS. The example 36600 is the paper's.
+export function dollarMicro(sompi, priceMicro) {
+  if (typeof sompi !== "bigint" || sompi < 0n) throw new Error("bad sompi");
+  if (!Number.isInteger(priceMicro) || priceMicro < 0) throw new Error("bad price");
+  return (sompi * BigInt(priceMicro)) / 100_000_000n;
+}
+
+// micro-USD of debt a pile can stand behind at ratioBps. 20000 asks for twice the debt.
+export function coverAtRatio(valueMicro, ratioBps) {
+  if (typeof valueMicro !== "bigint" || valueMicro < 0n) throw new Error("bad value");
+  if (!Number.isInteger(ratioBps) || ratioBps <= 0) throw new Error("bad ratio");
+  return (valueMicro * 10_000n) / BigInt(ratioBps);
+}
+
+// The paper's first estimate. Shares of the caller's fee, not of the block reward.
+export function treasurySplit(feeSompi) {
+  if (!Number.isInteger(feeSompi) || feeSompi < 0) throw new Error("bad fee");
+  const fee = BigInt(feeSompi);
+  const miner = (fee * 8_500n) / 10_000n;
+  const prover = (fee * 1_000n) / 10_000n;
+  const keeper = (fee * 500n) / 10_000n;
+  return { miner, prover, keeper, left: fee - miner - prover - keeper };
+}
+
 // Remaining price after `hours` of a compound per-hour fall, as a reduced fraction.
 export function cappedFall(hours, fallPerHourBps) {
   if (!Number.isInteger(hours) || hours < 0) throw new Error("bad hours");

@@ -381,3 +381,15 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No coin moved. `position.sil` was not edited. A lock of 150000000 sompi, 20 cents, quote 300000000, fails redeem at quote 711111110. The payment is 142222222 and the surplus is 7777778. The dust is 20000000. Quote 650000000 leaves 20000000. The vault of 200000000 fails at quote 948148146 and leaves 10370370. The command named in `STUDY.md` passed 63 tests. The runner printed 0 failures. The 62 passes in the section above stay there.
 
 **Reasoning.** The cap allows a quote the redeem cannot pay. The oracle is the signer who can bring it back. This is a study. We are not claiming a stablecoin.
+
+## The whitepaper, read on 9 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. `position.sil` was not edited. `peg.sil` was not edited. `lowerMedianIndex(2)` is 0. `(3/4)^8` is still over one tenth. `treasurySplit(100000000)` is 85000000, 10000000, and 5000000. The command named in `STUDY.md` passed 65 tests. The runner printed 0 failures. The 63 passes in the section above stay there.
+
+**Reasoning.** The paper was read. The covenants are unpublished. This is a study. We are not claiming a stablecoin.
+
+## A slice beside the vault, asked on 9 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. The reward is the 3 Nov figure, 206017223 sompi. Ten percent of one day is 17799887808000 sompi. Twenty percent of one day is 35599775616000 sompi. At price 36600 the 200 percent covers are 3257379468 and 6514758937 micro-USD. Both are under 50000000000. The same command passed 65 tests. The runner printed 0 failures.
+
+**Reasoning.** The slice is a count of the same coin. It does not insure the vault. This is a study. We are not claiming a stablecoin.

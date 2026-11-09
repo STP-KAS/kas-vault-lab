@@ -49,6 +49,8 @@ Each line is the short record. The link is the note for that day: what was done,
 | 7 Nov 2026 | These notes, no new chain | [The DAA copy stays on paper. The desk, the mini PC, and the Grok Bot machine do not mine it.](STUDY.md#the-daa-copy-left-on-paper-7-nov-2026) |
 | 7 Nov 2026 | Their pages, read again | [The liquidation bullet matches the chart. Silence at a full window takes 5001 basis points. The paper still has no body.](STUDY.md#their-pages-read-again-on-7-nov-2026) |
 | 7 Nov 2026 | These notes, no new chain | [Three rises stick a vault opened at the mint ratio. The surplus is 7777778 sompi, under the dust.](STUDY.md#the-step-that-does-not-fit-7-nov-2026) |
+| 9 Nov 2026 | The whitepaper, read here, no new chain | [The paper chooses proven time, counted once. Add and repay do not need a price. The fee sits beside the block reward.](STUDY.md#the-whitepaper-read-on-9-nov-2026) |
+| 9 Nov 2026 | These notes, no new chain | [Ten percent and twenty percent of the recorded reward are more KAS. Neither slice is chosen.](STUDY.md#a-slice-beside-the-vault-asked-on-9-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -76,6 +78,8 @@ These are the limits that later measurements did not close. Settled corrections 
 - A private chain that copied the public DAA score was not built. The desk, the mini PC, and the Grok Bot machine stay on their present work. Entry 53 of the subsidy table is the public reward recorded on 3 Nov 2026. [The DAA copy, left on paper.](STUDY.md#the-daa-copy-left-on-paper-7-nov-2026)
 - On 7 Nov 2026 the how-it-works liquidation bullet matches the chart. Leaving a window where every block votes takes 5001 basis points. At 90 percent it takes 4001, their picture of 11 blocks out of 20 takes 501, and at 50 percent it takes 1. The share that stops was voting, and then it leaves. The whitepaper body was still absent. [Their pages, read again.](STUDY.md#their-pages-read-again-on-7-nov-2026)
 - A vault opened at the mint ratio sticks on the third rise. Quote 711111110 pays 142222222 and leaves 7777778, under the dust of 20000000. The cap allows that step. The oracle is the signer who can bring the quote back. `position.sil` was not edited. [The step that does not fit.](STUDY.md#the-step-that-does-not-fit-7-nov-2026)
+- On 9 Nov 2026 the whitepaper body was there. The hour is proven selected-parent time, and the new time is counted once. `(3/4)^8` is still over one tenth. Their add and repay do not need a price. A stale branch opens when the past median passes the price time plus 30 minutes. On this devnet that median lagged the header, so the branch would not open on the wall clock. The covenants are still unpublished. [The whitepaper, read on 9 Nov 2026.](STUDY.md#the-whitepaper-read-on-9-nov-2026)
+- Ten percent of the reward recorded on 3 Nov 2026 is 20601722 sompi a block. Twenty percent is 41203444. One day of either slice, held at 200 percent, covers less than 50000 dollars at the paper's example price of 36600. The slice is the same KAS the vault already locks. It is not this study's backing. [A slice beside the vault.](STUDY.md#a-slice-beside-the-vault-asked-on-9-nov-2026)
 
 ## Shapes
 
@@ -92,6 +96,8 @@ These are different promises. None of them has been chosen. [The doors, side by 
 - The fixed promise was broadcast once on the same private devnet. The count is sompi, chosen once, with no quote and no step. The bearer was paid 100000000. It does not replace the position. [The promise on the node, 4 Nov 2026.](STUDY.md#the-promise-on-the-node-4-nov-2026)
 - A second file, `promise-pass.sil`, was broadcast once. The bearer named a next bearer. The sompi count stayed. It does not replace `promise.sil`, and `promise.sil` still cannot change its bearer. [The bearer handed the promise, 5 Nov 2026.](STUDY.md#the-bearer-handed-the-promise-5-nov-2026)
 - A miner median with a cut of the subsidy was measured as integers. The cut does not buy the median. It was not built, and it is not a rail. [The brake and the haircut, 6 Nov 2026.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
+- The whitepaper's vault, read on 9 Nov 2026, opens at 250 percent and liquidates at 200 percent. The caller pays the oracle fee. The block reward stays whole. The covenants are unpublished. This shape is not chosen. [The whitepaper.](STUDY.md#the-whitepaper-read-on-9-nov-2026)
+- Ten percent of the block reward, or twenty percent, can be counted beside that vault. Both counts are KAS taken from the finder. Neither is a public rule, and neither is chosen. [A slice beside the vault.](STUDY.md#a-slice-beside-the-vault-asked-on-9-nov-2026)
 
 ## Pushback
 
@@ -103,6 +109,7 @@ Some earlier sentences were wrong, or too final. The ones that still change how 
 - The five times were treated as a mechanism the page had already chosen. The page names the intervals and leaves the clock blank. On the evening read, the uncapped-decrease bullet and the fall-cap sentences were both still there. The position uses one band in both directions. The page has not chosen that band.
 - A four-thirds body at a fee of 2000000 sompi, `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`, was rejected because the fee was under 3784000 for transient mass 37840. The local calculator had accepted 2000000. The included body is the step above, at a fee of 5000000.
 - A small cut of the miner reward was measured on 6 Nov 2026. One hundred basis points of 4400000000 sompi is 44000000. The finder keeps the rest. The hashrate share is unchanged when every block is cut the same way. The band around the median does not charge the coalition that sets the median. The earlier sentences that keep the full KAS reward stay in their sections. The subsidy table was not edited. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
+- On 7 Nov 2026 the whitepaper body was still absent, and the hour was still blank. On 9 Nov 2026 the body was there. It chooses proven selected-parent time, counted once. The 7 Nov sentence stays in its row. [The whitepaper, read on 9 Nov 2026.](STUDY.md#the-whitepaper-read-on-9-nov-2026)
 
 The settled lines, including the block-count field, the balance reader, and the five percent run, are in [Pushback, kept on 3 Nov 2026](STUDY.md#pushback-kept-on-3-nov-2026).
 
@@ -111,7 +118,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the step that does not fit on 7 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the step that does not fit on 7 Nov, and the whitepaper and the reward slice on 9 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |
