@@ -34,6 +34,10 @@ import {
   dollarMicro,
   coverAtRatio,
   treasurySplit,
+  extraRoom,
+  voteBytes,
+  voteOffsets,
+  selectedVote,
   BIP100_PERIOD,
   bip100Next,
   floorScale,
@@ -345,6 +349,31 @@ test("ten and twenty percent of the recorded reward are more KAS", () => {
   assert.equal(fee.prover, 10_000_000n);
   assert.equal(fee.keeper, 5_000_000n);
   assert.equal(fee.left, 0n);
+});
+
+test("two well-formed votes fit in one coinbase, and the slice is unnamed", () => {
+  assert.equal(extraRoom(34), 151);
+  assert.equal(extraRoom(35), 150);
+  assert.equal(extraRoom(150), 35);
+  assert.ok(extraRoom(150) >= 13);
+  assert.ok(extraRoom(150) >= 26);
+  assert.equal(extraRoom(150) - 22, 13);
+  const miner = voteBytes(36_600);
+  const pool = voteBytes(1_000);
+  assert.equal(miner.length, 13);
+  assert.equal(selectedVote(miner, "exact"), 36_600);
+  assert.equal(selectedVote(miner, "first"), 36_600);
+  assert.equal(selectedVote(miner, "last"), 36_600);
+  const appended = [1, 2].concat(miner);
+  assert.equal(selectedVote(appended, "exact"), null);
+  assert.equal(selectedVote(appended, "first"), 36_600);
+  assert.equal(selectedVote(appended, "last"), 36_600);
+  const both = pool.concat(miner);
+  assert.deepEqual(voteOffsets(both), [0, 13]);
+  assert.equal(selectedVote(both, "first"), 1_000);
+  assert.equal(selectedVote(both, "last"), 36_600);
+  assert.equal(selectedVote(both, "exact"), null);
+  assert.equal(both.length <= extraRoom(150), true);
 });
 
 test("BIP 100 moves on 1512 of 2016 and by at most five percent", () => {

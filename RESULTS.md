@@ -393,3 +393,9 @@ The sentence above stopped short. Maturity and a spend had not been run. The nex
 **Fact.** No transaction was broadcast. No node was started. No coin moved. The reward is the 3 Nov figure, 206017223 sompi. Ten percent of one day is 17799887808000 sompi. Twenty percent of one day is 35599775616000 sompi. At price 36600 the 200 percent covers are 3257379468 and 6514758937 micro-USD. Both are under 50000000000. The same command passed 65 tests. The runner printed 0 failures.
 
 **Reasoning.** The slice is a count of the same coin. It does not insure the vault. This is a study. We are not claiming a stablecoin.
+
+## The proxy beside the ASIC, read on 10 Nov 2026
+
+**Fact.** No transaction was broadcast. No node was started. No coin moved. No proxy was built. `extraRoom(34)` is 151. `extraRoom(150)` is 35. A pool vote of 1000 followed by a miner vote of 36600 is 26 bytes. `selectedVote` is 1000 on the first rule and 36600 on the last rule. The command named in `STUDY.md` passed 66 tests. The runner printed 0 failures. The 65 passes in the section above stay there.
+
+**Reasoning.** The header binds the payload that was hashed. The slice of that payload is still unnamed. This is a study. We are not claiming a stablecoin.

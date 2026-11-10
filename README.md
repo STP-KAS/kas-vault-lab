@@ -51,6 +51,7 @@ Each line is the short record. The link is the note for that day: what was done,
 | 7 Nov 2026 | These notes, no new chain | [Three rises stick a vault opened at the mint ratio. The surplus is 7777778 sompi, under the dust.](STUDY.md#the-step-that-does-not-fit-7-nov-2026) |
 | 9 Nov 2026 | The whitepaper, read here, no new chain | [The paper chooses proven time, counted once. Add and repay do not need a price. The fee sits beside the block reward.](STUDY.md#the-whitepaper-read-on-9-nov-2026) |
 | 9 Nov 2026 | These notes, no new chain | [Ten percent and twenty percent of the recorded reward are more KAS. Neither slice is chosen.](STUDY.md#a-slice-beside-the-vault-asked-on-9-nov-2026) |
+| 10 Nov 2026 | The local v2.1.0 tree, no new chain | [The header binds the payload the ASIC hashed. Two votes fit in one extra data, and the paper does not say which one counts.](STUDY.md#the-proxy-beside-the-asic-read-on-10-nov-2026) |
 
 The private devnet has no peers, no DNS seeds, and no UPnP. It is not public TN10 and it is not mainnet. Home ASICs were not pointed at it.
 
@@ -80,6 +81,7 @@ These are the limits that later measurements did not close. Settled corrections 
 - A vault opened at the mint ratio sticks on the third rise. Quote 711111110 pays 142222222 and leaves 7777778, under the dust of 20000000. The cap allows that step. The oracle is the signer who can bring the quote back. `position.sil` was not edited. [The step that does not fit.](STUDY.md#the-step-that-does-not-fit-7-nov-2026)
 - On 9 Nov 2026 the whitepaper body was there. The hour is proven selected-parent time, and the new time is counted once. `(3/4)^8` is still over one tenth. Their add and repay do not need a price. A stale branch opens when the past median passes the price time plus 30 minutes. On this devnet that median lagged the header, so the branch would not open on the wall clock. The covenants are still unpublished. [The whitepaper, read on 9 Nov 2026.](STUDY.md#the-whitepaper-read-on-9-nov-2026)
 - Ten percent of the reward recorded on 3 Nov 2026 is 20601722 sompi a block. Twenty percent is 41203444. One day of either slice, held at 200 percent, covers less than 50000 dollars at the paper's example price of 36600. The slice is the same KAS the vault already locks. It is not this study's backing. [A slice beside the vault.](STUDY.md#a-slice-beside-the-vault-asked-on-9-nov-2026)
+- On 10 Nov 2026 the posted proxy has the pool build the job. The header binds the payload the ASIC hashed. An alert after the block is public leaves that vote in the window. At the longest legal script the extra data still holds two 13-byte votes. The first vote and the last vote are different prices. The paper does not name the slice. [The proxy beside the ASIC.](STUDY.md#the-proxy-beside-the-asic-read-on-10-nov-2026)
 
 ## Shapes
 
@@ -110,6 +112,7 @@ Some earlier sentences were wrong, or too final. The ones that still change how 
 - A four-thirds body at a fee of 2000000 sompi, `fd74b8433ccd63d2ea3d5b5e7f2f687eaab34f4293b2ba4560f1dc5be9397e5e`, was rejected because the fee was under 3784000 for transient mass 37840. The local calculator had accepted 2000000. The included body is the step above, at a fee of 5000000.
 - A small cut of the miner reward was measured on 6 Nov 2026. One hundred basis points of 4400000000 sompi is 44000000. The finder keeps the rest. The hashrate share is unchanged when every block is cut the same way. The band around the median does not charge the coalition that sets the median. The earlier sentences that keep the full KAS reward stay in their sections. The subsidy table was not edited. [The brake and the haircut.](STUDY.md#the-brake-and-the-haircut-6-nov-2026)
 - On 7 Nov 2026 the whitepaper body was still absent, and the hour was still blank. On 9 Nov 2026 the body was there. It chooses proven selected-parent time, counted once. The 7 Nov sentence stays in its row. [The whitepaper, read on 9 Nov 2026.](STUDY.md#the-whitepaper-read-on-9-nov-2026)
+- On 9 Nov 2026 the note said a pool can write the payload, and that Sutton's post does not name a mechanism. On 10 Nov 2026 a reply names a proxy beside the ASIC. The pool still builds the job. The 9 Nov sentence stays in its section. [The proxy beside the ASIC.](STUDY.md#the-proxy-beside-the-asic-read-on-10-nov-2026)
 
 The settled lines, including the block-count field, the balance reader, and the five percent run, are in [Pushback, kept on 3 Nov 2026](STUDY.md#pushback-kept-on-3-nov-2026).
 
@@ -118,7 +121,7 @@ The settled lines, including the block-count field, the balance reader, and the 
 | File | What it is |
 | --- | --- |
 | [FINDINGS.md](FINDINGS.md) | The short extract, then the handoff. The earlier long notes were not rewritten |
-| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the step that does not fit on 7 Nov, and the whitepaper and the reward slice on 9 Nov |
+| [STUDY.md](STUDY.md) | The argument, from 1 Nov through the reward slice on 9 Nov, and the proxy beside the ASIC on 10 Nov |
 | [RESULTS.md](RESULTS.md) | What was submitted, and the transaction ids |
 | [ISSUES.md](ISSUES.md) | Each question, and whether the code answers it |
 | [DOORS.md](DOORS.md) | Who orders, and who holds the key |

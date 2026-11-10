@@ -380,6 +380,71 @@ export function treasurySplit(feeSompi) {
   return { miner, prover, keeper, left: fee - miner - prover - keeper };
 }
 
+// Coinbase payload in the local v2.1.0 tree.
+// 8 blue score, 8 subsidy, 2 script version, 1 script length, the script, then extra data.
+export const COINBASE_HEAD = 19;
+export const COINBASE_PAYLOAD_MAX = 204;
+export const COINBASE_SCRIPT_MAX = 150;
+export const VOTE_LEN = 13;
+
+// Bytes left for extra data after a legal script. The vote has to live here.
+export function extraRoom(scriptLen) {
+  if (!Number.isInteger(scriptLen) || scriptLen < 0 || scriptLen > COINBASE_SCRIPT_MAX) {
+    throw new Error("bad script");
+  }
+  return COINBASE_PAYLOAD_MAX - COINBASE_HEAD - scriptLen;
+}
+
+// KVOT, version 1, price as a little-endian u64. Price must fit in a safe integer.
+export function voteBytes(price) {
+  if (!Number.isInteger(price) || price <= 0) throw new Error("bad price");
+  const out = [0x4b, 0x56, 0x4f, 0x54, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+  let n = price;
+  for (let i = 0; i < 8; i += 1) {
+    out[5 + i] = n % 256;
+    n = Math.floor(n / 256);
+  }
+  return out;
+}
+
+function priceAtOffset(extra, offset) {
+  if (!Number.isInteger(offset) || offset < 0 || offset + VOTE_LEN > extra.length) return null;
+  if (extra[offset] !== 0x4b || extra[offset + 1] !== 0x56 || extra[offset + 2] !== 0x4f || extra[offset + 3] !== 0x54) {
+    return null;
+  }
+  if (extra[offset + 4] !== 1) return null;
+  let price = 0n;
+  for (let i = 0; i < 8; i += 1) {
+    price += BigInt(extra[offset + 5 + i]) << (8n * BigInt(i));
+  }
+  if (price <= 0n) return null;
+  if (price > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("price does not fit");
+  return Number(price);
+}
+
+// Offsets of every well-formed 13-byte vote. The paper does not say which one counts.
+export function voteOffsets(extra) {
+  if (!Array.isArray(extra)) throw new Error("bad extra");
+  const found = [];
+  for (let i = 0; i + VOTE_LEN <= extra.length; i += 1) {
+    if (priceAtOffset(extra, i) !== null) found.push(i);
+  }
+  return found;
+}
+
+// "exact" accepts only a 13-byte extra. "first" and "last" scan. They can disagree.
+export function selectedVote(extra, rule) {
+  const offsets = voteOffsets(extra);
+  if (rule === "exact") {
+    if (extra.length !== VOTE_LEN || offsets.length !== 1 || offsets[0] !== 0) return null;
+    return priceAtOffset(extra, 0);
+  }
+  if (offsets.length === 0) return null;
+  if (rule === "first") return priceAtOffset(extra, offsets[0]);
+  if (rule === "last") return priceAtOffset(extra, offsets[offsets.length - 1]);
+  throw new Error("bad rule");
+}
+
 // Remaining price after `hours` of a compound per-hour fall, as a reduced fraction.
 export function cappedFall(hours, fallPerHourBps) {
   if (!Number.isInteger(hours) || hours < 0) throw new Error("bad hours");
